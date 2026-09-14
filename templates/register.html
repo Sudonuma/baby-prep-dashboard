@@ -4,20 +4,32 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Create account · Baby prep</title>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('babyTheme') || 'peach';</script>
+  <link rel="stylesheet" href="/static/themes.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script>
     tailwind.config = {
       theme: { extend: {
         colors: {
-          blush: {50:'#fff8f7',100:'#fcefed',200:'#f8ddd8',300:'#f2c4bd',400:'#e8a69c',500:'#d78379',600:'#b96861',700:'#985650'},
-          ink: '#362f30'
+          blush: {
+            50:'rgb(var(--b50) / <alpha-value>)',
+            100:'rgb(var(--b100) / <alpha-value>)',
+            200:'rgb(var(--b200) / <alpha-value>)',
+            300:'rgb(var(--b300) / <alpha-value>)',
+            400:'rgb(var(--b400) / <alpha-value>)',
+            500:'rgb(var(--b500) / <alpha-value>)',
+            600:'rgb(var(--b600) / <alpha-value>)',
+            700:'rgb(var(--b700) / <alpha-value>)'
+          },
+          ink:'rgb(var(--ink) / <alpha-value>)',
+          page:'rgb(var(--page) / <alpha-value>)'
         },
-        boxShadow: { soft:'0 10px 30px rgba(66, 42, 42, .07)' }
+        boxShadow: { soft:'0 10px 30px rgba(var(--shadow-rgb), .07)' }
       }}
     }
   </script>
 </head>
-<body class="min-h-screen bg-[#fbf8f7] text-ink flex items-center justify-center px-4">
+<body class="min-h-screen bg-page text-ink flex items-center justify-center px-4">
   <div class="w-full max-w-sm rounded-3xl border border-blush-100 bg-white p-8 shadow-soft">
     <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blush-600"><span class="h-2 w-2 rounded-full bg-blush-400"></span> NEST / BABY PREP</div>
     <h1 class="text-2xl font-semibold tracking-tight">Create your account</h1>

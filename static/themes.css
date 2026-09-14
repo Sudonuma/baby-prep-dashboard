@@ -1,0 +1,28 @@
+/* Color themes — each palette supplies one set of RGB triplets.
+   The shades follow the same lightness/saturation curve, so any palette can
+   drop in everywhere the blush scale is used. Add a new theme by adding a
+   [data-theme="..."] block. */
+:root,
+[data-theme="peach"] {
+  --b50: 255 248 247; --b100: 252 239 237; --b200: 248 221 216; --b300: 242 196 189;
+  --b400: 232 166 156; --b500: 215 131 121; --b600: 185 104 97; --b700: 152 86 80;
+  --ink: 54 47 48; --page: 251 248 247; --kicker: 181 140 136; --shadow-rgb: 66 42 42;
+}
+
+[data-theme="ocean"] {
+  --b50: 245 250 250; --b100: 232 243 244; --b200: 211 232 234; --b300: 179 216 220;
+  --b400: 133 191 198; --b500: 95 167 176; --b600: 74 138 147; --b700: 61 111 118;
+  --ink: 48 57 58; --page: 246 249 249; --kicker: 136 156 160; --shadow-rgb: 42 58 60;
+}
+
+[data-theme="burgundy"] {
+  --b50: 253 246 246; --b100: 248 233 234; --b200: 240 211 213; --b300: 227 180 184;
+  --b400: 209 139 145; --b500: 188 107 114; --b600: 157 82 90; --b700: 126 66 73;
+  --ink: 56 48 47; --page: 250 246 246; --kicker: 176 140 142; --shadow-rgb: 66 42 44;
+}
+
+[data-theme="prune"] {
+  --b50: 250 246 251; --b100: 242 233 245; --b200: 230 213 236; --b300: 213 185 223;
+  --b400: 190 151 203; --b500: 166 120 183; --b600: 139 95 155; --b700: 112 76 125;
+  --ink: 54 47 58; --page: 248 245 249; --kicker: 150 136 162; --shadow-rgb: 62 42 72;
+}
