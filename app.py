@@ -1,11 +1,18 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse
+import datetime as dt
+
+from fastapi import FastAPI, Form, Request
+from fastapi.responses import HTMLResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
-app = FastAPI(title="Baby Winter Wardrobe")
+import auth
+from database import create_user, get_db, get_profile, get_user_by_name, init_db, save_profile
+
+app = FastAPI(title="Baby Prep Dashboard")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 templates = Jinja2Templates(directory="templates")
+
+init_db()
 
 # size_targets = how many pieces baby needs IN ROTATION while in that size
 # (EU sizes are the baby's max height in cm; 50 ≈ birth–6 weeks, 56 ≈ 1–3
@@ -122,9 +129,40 @@ MOM = [
     {"id":"pyjamas","name":"Comfortable pyjamas","type":"Health & care","icon":"😴","brand":"","target":2,"unit":"pieces","note":"Button-front tops make nursing easier; darker or patterned fabrics hide leaks.","group":"Health & care"},
 ]
 
+SEASONS = {12: "Winter", 1: "Winter", 2: "Winter", 3: "Spring", 4: "Spring", 5: "Spring",
+           6: "Summer", 7: "Summer", 8: "Summer", 9: "Autumn", 10: "Autumn", 11: "Autumn"}
+
+
+def view_context(user) -> dict:
+    """Profile plus everything derived from it for the dashboard template."""
+    with get_db() as db:
+        profile = get_profile(db, user["id"])
+    season_label, days_to_due = "Winter", None
+    if profile["due_date"]:
+        try:
+            due = dt.date.fromisoformat(profile["due_date"])
+            season_label = SEASONS.get(due.month, "Winter")
+            days_to_due = (due - dt.date.today()).days
+            if days_to_due < 0:
+                days_to_due = None
+        except ValueError:
+            pass
+    return {
+        **profile,
+        "season_label": season_label,
+        "days_to_due": days_to_due,
+        "baby_display": profile["baby_name"] or "your little one",
+        "username": user["username"],
+    }
+
+
 @app.get("/", response_class=HTMLResponse)
 async def dashboard(request: Request):
+    user = auth.current_user(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
     return templates.TemplateResponse(request, "index.html", {
+        **view_context(user),
         "wardrobe": WARDROBE,
         "sleep": SLEEP,
         "care": CARE,
@@ -135,6 +173,103 @@ async def dashboard(request: Request):
         "category_brands": CATEGORY_BRANDS,
         "outfits": OUTFITS,
     })
+
+
+@app.get("/login", response_class=HTMLResponse)
+async def login_page(request: Request, error: str = ""):
+    if auth.current_user(request):
+        return RedirectResponse("/", status_code=303)
+    return templates.TemplateResponse(request, "login.html", {"error": error})
+
+
+@app.post("/login")
+async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+    with get_db() as db:
+        user = auth.authenticate(db, username, password)
+        if not user:
+            return templates.TemplateResponse(
+                request, "login.html",
+                {"error": "Wrong username or password."}, status_code=401)
+        token = auth.create_session(db, user["id"])
+    response = RedirectResponse("/", status_code=303)
+    response.set_cookie(auth.SESSION_COOKIE, token, httponly=True, samesite="lax")
+    return response
+
+
+@app.get("/register", response_class=HTMLResponse)
+async def register_page(request: Request, error: str = ""):
+    if auth.current_user(request):
+        return RedirectResponse("/", status_code=303)
+    return templates.TemplateResponse(request, "register.html", {"error": error})
+
+
+@app.post("/register")
+async def register(request: Request, username: str = Form(...),
+                   password: str = Form(...), password2: str = Form(...)):
+    username = username.strip()
+    if len(username) < 3:
+        return templates.TemplateResponse(request, "register.html",
+            {"error": "Username needs at least 3 characters."}, status_code=400)
+    if len(password) < 6:
+        return templates.TemplateResponse(request, "register.html",
+            {"error": "Password needs at least 6 characters."}, status_code=400)
+    if password != password2:
+        return templates.TemplateResponse(request, "register.html",
+            {"error": "The two passwords don't match."}, status_code=400)
+    with get_db() as db:
+        if get_user_by_name(db, username):
+            return templates.TemplateResponse(request, "register.html",
+                {"error": "That username is already taken."}, status_code=400)
+        user_id = create_user(db, username, auth.hash_password(password))
+        token = auth.create_session(db, user_id)
+    response = RedirectResponse("/settings?welcome=1", status_code=303)
+    response.set_cookie(auth.SESSION_COOKIE, token, httponly=True, samesite="lax")
+    return response
+
+
+@app.post("/logout")
+async def logout(request: Request):
+    token = request.cookies.get(auth.SESSION_COOKIE)
+    if token:
+        with get_db() as db:
+            auth.destroy_session(db, token)
+    response = RedirectResponse("/login", status_code=303)
+    response.delete_cookie(auth.SESSION_COOKIE)
+    return response
+
+
+@app.get("/settings", response_class=HTMLResponse)
+async def settings_page(request: Request, welcome: str = "", error: str = ""):
+    user = auth.current_user(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    with get_db() as db:
+        profile = get_profile(db, user["id"])
+    return templates.TemplateResponse(request, "settings.html", {
+        **profile, "username": user["username"], "welcome": welcome, "error": error})
+
+
+@app.post("/settings")
+async def settings_save(request: Request, baby_name: str = Form(""), due_date: str = Form("")):
+    user = auth.current_user(request)
+    if not user:
+        return RedirectResponse("/login", status_code=303)
+    baby_name = baby_name.strip()[:40]
+    if due_date:
+        try:
+            dt.date.fromisoformat(due_date)
+        except ValueError:
+            return templates.TemplateResponse(request, "settings.html", {
+                **get_profile_safe(user), "username": user["username"],
+                "welcome": "", "error": "That due date doesn't look valid."}, status_code=400)
+    with get_db() as db:
+        save_profile(db, user["id"], baby_name, due_date or None)
+    return RedirectResponse("/", status_code=303)
+
+
+def get_profile_safe(user):
+    with get_db() as db:
+        return get_profile(db, user["id"])
 
 @app.get("/health")
 async def health():
