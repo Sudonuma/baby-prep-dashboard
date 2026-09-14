@@ -18,7 +18,7 @@ html = env.get_template("index.html").render(
     # multi-user personalization defaults
     baby_name=None, due_date=None, season_label="Winter", days_to_due=None,
     baby_display="your little one", username="tester", server_theme=None,
-    baby_now=None,
+    baby_now=None, season_emoji="❄️", arrived=False,
 )
 
 # Sleep section: sleepwear moved out of clothing, essentials and optional groups present.
@@ -62,7 +62,9 @@ assert "momFilter" in html, "mom sub-filter tabs missing"
 # Multi-user personalization renders with defaults.
 assert "WINTER CAPSULE" in html, "season capsule chip missing"
 assert "Baby • Winter arrival" in html, "season header missing"
-assert "your little one" in html, "neutral baby-name fallback missing"
+assert "Your little one" in html and "is almost here" in html, "hero headline missing"
+assert "Let's plan gently" in html, "hero subline missing"
+assert "no overspending" in html and "no panic-lists" in html, "hero chips missing"
 assert "Your little one is on the way" in html, "baby-now fallback card missing"
 
 # Tips section: advice moved out of the hero lives here now.

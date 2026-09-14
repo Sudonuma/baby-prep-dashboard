@@ -83,12 +83,16 @@
           <div class="overflow-hidden rounded-3xl border border-blush-100 bg-white p-6 shadow-soft md:p-8">
             <div class="max-w-2xl">
               <div class="mb-3 inline-flex rounded-full bg-blush-50 px-3 py-1 text-xs font-medium text-blush-700">{{ season_label|upper }} CAPSULE</div>
-              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">Seven days of outfits for our lovely <br><span class="text-blush-600">{{ baby_display }}</span></h3>
+              {% if arrived %}
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is here 🎉</h3>
+              <p class="mt-4 text-lg leading-8 text-stone-500">Everything is ready — enjoy the first days together.</p>
+              {% else %}
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is almost here {{ season_emoji }}</h3>
+              <p class="mt-4 text-lg leading-8 text-stone-500">Let's plan gently, one category at a time.</p>
+              {% endif %}
               <div class="mt-6 flex flex-wrap gap-2 text-xs text-stone-600">
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Base → body</span>
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Day → romper / trousers</span>
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Layer → cardigan</span>
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Night → sleepsuit + sleep bag</span>
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">✓ no overspending</span>
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">✓ no panic-lists</span>
               </div>
             </div>
           </div>

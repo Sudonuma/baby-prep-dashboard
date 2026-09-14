@@ -133,6 +133,7 @@ MOM = [
 
 SEASONS = {12: "Winter", 1: "Winter", 2: "Winter", 3: "Spring", 4: "Spring", 5: "Spring",
            6: "Summer", 7: "Summer", 8: "Summer", 9: "Autumn", 10: "Autumn", 11: "Autumn"}
+SEASON_EMOJI = {"Winter": "❄️", "Spring": "🌸", "Summer": "☀️", "Autumn": "🍂"}
 
 
 # Community-ready tips shown in their own section, grouped by topic.
@@ -204,19 +205,21 @@ def view_context(user) -> dict:
     """Profile plus everything derived from it for the dashboard template."""
     with get_db() as db:
         profile = get_profile(db, user["id"])
-    season_label, days_to_due = "Winter", None
+    season_label, days_to_due, arrived = "Winter", None, False
     if profile["due_date"]:
         try:
             due = dt.date.fromisoformat(profile["due_date"])
             season_label = SEASONS.get(due.month, "Winter")
             days_to_due = (due - dt.date.today()).days
             if days_to_due < 0:
-                days_to_due = None
+                arrived, days_to_due = True, None
         except ValueError:
             pass
     return {
         **profile,
         "season_label": season_label,
+        "season_emoji": SEASON_EMOJI.get(season_label, "❄️"),
+        "arrived": arrived,
         "days_to_due": days_to_due,
         "baby_display": profile["baby_name"] or "your little one",
         "username": user["username"],
