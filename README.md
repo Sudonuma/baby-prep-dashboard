@@ -17,7 +17,7 @@ Open http://127.0.0.1:8000
 
 - Register at `/register` (or log in at `/login`). Accounts and profiles live in a local SQLite database at `data/app.db` — auto-created on first start, gitignored.
 - After signing up you're asked for your baby's name and due date (both optional). The dashboard personalizes from these: the baby name appears in the overview, and the due date sets the arrival season ("Winter arrival", the season capsule chip) plus a due-day countdown.
-- Item quantities, links and brand picks still live in the browser's localStorage, per device.
+- Item quantities, links, brand picks, laundry cadence, size system and theme live in the database **per account** — new accounts start fresh, and your dashboard follows your login across devices (saved with a short debounce as you click).
 
 ## What is interactive
 

@@ -16,7 +16,7 @@ html = env.get_template("index.html").render(
     outfits=dashboard_app.OUTFITS,
     # multi-user personalization defaults
     baby_name=None, due_date=None, season_label="Winter", days_to_due=None,
-    baby_display="your little one", username="tester",
+    baby_display="your little one", username="tester", server_theme=None,
 )
 
 # Sleep section: sleepwear moved out of clothing, essentials and optional groups present.

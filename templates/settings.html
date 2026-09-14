@@ -73,14 +73,18 @@
   <script>
     const themeDots=[...document.querySelectorAll('.theme-dot')];
     const themeNames={peach:'Peach',ocean:'Dusty blue',burgundy:'Dusty burgundy',prune:'Soft prune'};
-    function setTheme(id){
+    function setTheme(id, push){
       document.documentElement.dataset.theme=id;
-      localStorage.setItem('babyTheme',id);
+      localStorage.setItem('babyTheme',id); // pre-login pages use this
       themeDots.forEach(d=>d.classList.toggle('active', d.dataset.theme===id));
       document.getElementById('theme-name').textContent=themeNames[id]||id;
+      if(push!==false){
+        fetch('/api/theme', {method:'POST', headers:{'Content-Type':'application/json'},
+                             body: JSON.stringify({theme:id})}).catch(()=>{});
+      }
     }
     themeDots.forEach(d=>d.addEventListener('click',()=>setTheme(d.dataset.theme)));
-    setTheme(localStorage.getItem('babyTheme')||'peach');
+    setTheme('{{ theme or "peach" }}', false);
   </script>
 </body>
 </html>

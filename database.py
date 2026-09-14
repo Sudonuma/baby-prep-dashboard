@@ -1,4 +1,5 @@
 """SQLite storage for user accounts, profiles and sessions (stdlib only)."""
+import json
 import os
 import sqlite3
 from contextlib import contextmanager
@@ -34,6 +35,31 @@ def init_db():
             token TEXT PRIMARY KEY,
             user_id INTEGER NOT NULL,
             created_at TEXT DEFAULT CURRENT_TIMESTAMP)""")
+        db.execute("""CREATE TABLE IF NOT EXISTS user_state(
+            user_id INTEGER PRIMARY KEY,
+            state_json TEXT NOT NULL,
+            updated_at TEXT DEFAULT CURRENT_TIMESTAMP)""")
+
+
+def get_state(db, user_id: int) -> dict:
+    row = db.execute(
+        "SELECT state_json FROM user_state WHERE user_id=?", (user_id,)
+    ).fetchone()
+    if not row:
+        return {}
+    try:
+        state = json.loads(row["state_json"])
+        return state if isinstance(state, dict) else {}
+    except (ValueError, TypeError):
+        return {}
+
+
+def save_state(db, user_id: int, state: dict):
+    db.execute(
+        """INSERT INTO user_state(user_id, state_json, updated_at) VALUES(?,?,CURRENT_TIMESTAMP)
+           ON CONFLICT(user_id) DO UPDATE SET state_json=excluded.state_json, updated_at=CURRENT_TIMESTAMP""",
+        (user_id, json.dumps(state)),
+    )
 
 
 def create_user(db, username: str, password_hash: str) -> int:

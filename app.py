@@ -1,12 +1,14 @@
 import datetime as dt
+import json
 
 from fastapi import FastAPI, Form, Request
-from fastapi.responses import HTMLResponse, RedirectResponse
+from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 import auth
-from database import create_user, get_db, get_profile, get_user_by_name, init_db, save_profile
+from database import (create_user, get_db, get_profile, get_state, get_user_by_name,
+                      init_db, save_profile, save_state)
 
 app = FastAPI(title="Baby Prep Dashboard")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -161,8 +163,11 @@ async def dashboard(request: Request):
     user = auth.current_user(request)
     if not user:
         return RedirectResponse("/login", status_code=303)
+    with get_db() as db:
+        state = get_state(db, user["id"])
     return templates.TemplateResponse(request, "index.html", {
         **view_context(user),
+        "server_theme": state.get("theme"),
         "wardrobe": WARDROBE,
         "sleep": SLEEP,
         "care": CARE,
@@ -173,6 +178,56 @@ async def dashboard(request: Request):
         "category_brands": CATEGORY_BRANDS,
         "outfits": OUTFITS,
     })
+
+
+MAX_STATE_BYTES = 100_000
+
+
+@app.get("/api/state")
+async def read_state(request: Request):
+    user = auth.current_user(request)
+    if not user:
+        return JSONResponse({"error": "not logged in"}, status_code=401)
+    with get_db() as db:
+        return JSONResponse(get_state(db, user["id"]))
+
+
+@app.post("/api/state")
+async def write_state(request: Request):
+    user = auth.current_user(request)
+    if not user:
+        return JSONResponse({"error": "not logged in"}, status_code=401)
+    raw = await request.body()
+    if len(raw) > MAX_STATE_BYTES:
+        return JSONResponse({"error": "state too large"}, status_code=400)
+    try:
+        state = json.loads(raw)
+    except ValueError:
+        return JSONResponse({"error": "invalid json"}, status_code=400)
+    if not isinstance(state, dict):
+        return JSONResponse({"error": "invalid state"}, status_code=400)
+    with get_db() as db:
+        save_state(db, user["id"], state)
+    return JSONResponse({"ok": True})
+
+
+@app.post("/api/theme")
+async def set_theme(request: Request):
+    user = auth.current_user(request)
+    if not user:
+        return JSONResponse({"error": "not logged in"}, status_code=401)
+    try:
+        body = json.loads(await request.body())
+        theme = body.get("theme")
+    except ValueError:
+        theme = None
+    if theme not in ("peach", "ocean", "burgundy", "prune"):
+        return JSONResponse({"error": "unknown theme"}, status_code=400)
+    with get_db() as db:
+        state = get_state(db, user["id"])
+        state["theme"] = theme
+        save_state(db, user["id"], state)
+    return JSONResponse({"ok": True})
 
 
 @app.get("/login", response_class=HTMLResponse)
@@ -245,8 +300,10 @@ async def settings_page(request: Request, welcome: str = "", error: str = ""):
         return RedirectResponse("/login", status_code=303)
     with get_db() as db:
         profile = get_profile(db, user["id"])
+        theme = get_state(db, user["id"]).get("theme") or "peach"
     return templates.TemplateResponse(request, "settings.html", {
-        **profile, "username": user["username"], "welcome": welcome, "error": error})
+        **profile, "username": user["username"], "welcome": welcome,
+        "error": error, "theme": theme})
 
 
 @app.post("/settings")
