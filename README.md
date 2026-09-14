@@ -17,7 +17,7 @@ Open http://127.0.0.1:8000
 
 - Register at `/register` (or log in at `/login`). Accounts and profiles live in a local SQLite database at `data/app.db` — auto-created on first start, gitignored.
 - After signing up you're asked for your baby's name and due date (both optional). The dashboard personalizes from these: the baby name appears in the overview, and the due date sets the arrival season ("Winter arrival", the season capsule chip) plus a due-day countdown.
-- Item quantities, links, brand picks, laundry cadence, size system and theme live in the database **per account** — new accounts start fresh, and your dashboard follows your login across devices (saved with a short debounce as you click).
+- Item quantities, links, brand picks, size system and theme live in the database **per account** — new accounts start fresh, and your dashboard follows your login across devices (saved with a short debounce as you click).
 
 ## What is interactive
 
@@ -31,7 +31,6 @@ Open http://127.0.0.1:8000
 - Mom section with All / Nursing / Health & care tabs — nursing essentials and postpartum care
 - Increment/decrement owned quantities (clothing counters adjust the selected size)
 - Progress toward the starter capsule for the selected size
-- Adjust laundry cadence
 - Click outfit recipes to see the layer stack
 - Add, edit or remove a product link on any item (saved in this browser) — park things you plan to buy when they go on sale; a data-provided link acts as the default
 - Interactive shopping strategy: curated brand pools (high-quality basics / cute outfits for a good price) — pick brands, add your own, and set or change the brand on any item card (all saved in this browser). Clothing cards suggest from the strategy pools; sleep, care, gear and leisure cards each have their own brand suggestions
