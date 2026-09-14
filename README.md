@@ -29,6 +29,8 @@ Open http://127.0.0.1:8000
 - Baby gear section for the big-ticket basics (stroller, car seat, carrier, bouncer, playard, swing)
 - Leisure section for awake time (activity gym, books, plush toys, toys)
 - Mom section with All / Nursing / Health & care tabs — nursing essentials and postpartum care
+- Tips & tricks section with All / Clothing / Sleep tabs — practical advice cards with sources
+- "Baby now" card: gestational-week size comparison with a growing-flower countdown, computed from the due date
 - Increment/decrement owned quantities (clothing counters adjust the selected size)
 - Progress toward the starter capsule for the selected size
 - Click outfit recipes to see the layer stack

@@ -11,12 +11,14 @@ html = env.get_template("index.html").render(
     gear=dashboard_app.GEAR,
     leisure=dashboard_app.LEISURE,
     mom=dashboard_app.MOM,
+    tips=dashboard_app.TIPS,
     brand_tiers=dashboard_app.BRAND_TIERS,
     category_brands=dashboard_app.CATEGORY_BRANDS,
     outfits=dashboard_app.OUTFITS,
     # multi-user personalization defaults
     baby_name=None, due_date=None, season_label="Winter", days_to_due=None,
     baby_display="your little one", username="tester", server_theme=None,
+    baby_now=None,
 )
 
 # Sleep section: sleepwear moved out of clothing, essentials and optional groups present.
@@ -61,6 +63,13 @@ assert "momFilter" in html, "mom sub-filter tabs missing"
 assert "WINTER CAPSULE" in html, "season capsule chip missing"
 assert "Baby • Winter arrival" in html, "season header missing"
 assert "your little one" in html, "neutral baby-name fallback missing"
+assert "Your little one is on the way" in html, "baby-now fallback card missing"
+
+# Tips section: advice moved out of the hero lives here now.
+assert "Planning principle" not in html, "old planning card still present"
+for expected in ("One extra layer", "Zips beat buttons", "Keep sleep separate from cute layering"):
+    assert expected in html, f"tip missing: {expected}"
+assert "tipsFilter" in html, "tips tabs missing"
 
 def json_escaped(s: str) -> str:
     """Approximate Jinja's htmlsafe tojson: & <> ' and non-ASCII become \\uXXXX."""
