@@ -23,6 +23,9 @@ ENV/
 .env
 .env.*
 
+# Local SQLite database (user accounts and profiles)
+data/
+
 # Test / coverage
 .coverage
 .coverage.*

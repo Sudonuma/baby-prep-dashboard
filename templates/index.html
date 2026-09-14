@@ -3,51 +3,72 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Baby Winter Wardrobe</title>
+  <title>Baby Prep Dashboard</title>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('babyTheme') || 'peach';</script>
+  {% if server_theme %}<script>document.documentElement.dataset.theme = '{{ server_theme }}';</script>{% endif %}
+  <link rel="stylesheet" href="/static/themes.css">
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script>
     tailwind.config = {
       theme: { extend: {
         colors: {
-          blush: {50:'#fff8f7',100:'#fcefed',200:'#f8ddd8',300:'#f2c4bd',400:'#e8a69c',500:'#d78379',600:'#b96861',700:'#985650'},
-          ink: '#362f30', cream:'#fffdfb'
+          blush: {
+            50:'rgb(var(--b50) / <alpha-value>)',
+            100:'rgb(var(--b100) / <alpha-value>)',
+            200:'rgb(var(--b200) / <alpha-value>)',
+            300:'rgb(var(--b300) / <alpha-value>)',
+            400:'rgb(var(--b400) / <alpha-value>)',
+            500:'rgb(var(--b500) / <alpha-value>)',
+            600:'rgb(var(--b600) / <alpha-value>)',
+            700:'rgb(var(--b700) / <alpha-value>)'
+          },
+          ink:'rgb(var(--ink) / <alpha-value>)',
+          page:'rgb(var(--page) / <alpha-value>)'
         },
-        boxShadow: { soft:'0 10px 30px rgba(66, 42, 42, .07)' }
+        boxShadow: { soft:'0 10px 30px rgba(var(--shadow-rgb), .07)' }
       }}
     }
   </script>
 </head>
-<body class="min-h-screen bg-[#fbf8f7] text-ink" x-data="wardrobeApp()">
+<body class="min-h-screen bg-page text-ink" x-data="wardrobeApp()" x-init="hydrate()">
   <div class="flex min-h-screen">
     <aside class="hidden w-64 shrink-0 border-r border-blush-100 bg-white/80 px-5 py-6 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:overflow-y-auto">
       <div class="mb-8">
-        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blush-600"><span class="h-2 w-2 rounded-full bg-blush-400"></span> NEST / WINTER BABY</div>
+        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blush-600"><span class="h-2 w-2 rounded-full bg-blush-400"></span> NEST / BABY PREP</div>
         <h1 class="text-2xl font-semibold tracking-tight">Baby prep</h1>
         <p class="mt-1 text-sm text-stone-500">A visual shopping planner.</p>
       </div>
       <nav class="space-y-1 text-sm">
         <button :class="filter==='All' ? 'nav active' : 'nav'" @click="goTo('All')">Overview</button>
-        <button :class="filter==='Clothing' ? 'nav active' : 'nav'" @click="goTo('Clothing','wardrobe-section')">Baby clothing <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="clothingCount()"></span></button>
-        <button :class="filter==='SleepSetup' ? 'nav active' : 'nav'" @click="goTo('SleepSetup','sleep-section')">Sleep <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="sleepCount()"></span></button>
-        <button :class="filter==='CareSetup' ? 'nav active' : 'nav'" @click="goTo('CareSetup','care-section')">Diapering &amp; bath &amp; care <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="careCount()"></span></button>
-        <button :class="filter==='LeisureSetup' ? 'nav active' : 'nav'" @click="goTo('LeisureSetup','leisure-section')">Leisure <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="leisureCount()"></span></button>
-        <button :class="filter==='GearSetup' ? 'nav active' : 'nav'" @click="goTo('GearSetup','gear-section')">Baby gear <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="gearCount()"></span></button>
-        <button :class="filter==='MomSetup' ? 'nav active' : 'nav'" @click="goTo('MomSetup','mom-section')">Mom <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="momCount()"></span></button>
+        <button :class="filter==='Clothing' ? 'nav active' : 'nav'" @click="goTo('Clothing','wardrobe-section')">Baby clothing</button>
+        <button :class="filter==='SleepSetup' ? 'nav active' : 'nav'" @click="goTo('SleepSetup','sleep-section')">Sleep</button>
+        <button :class="filter==='CareSetup' ? 'nav active' : 'nav'" @click="goTo('CareSetup','care-section')">Diapering &amp; bath &amp; care</button>
+        <button :class="filter==='LeisureSetup' ? 'nav active' : 'nav'" @click="goTo('LeisureSetup','leisure-section')">Leisure</button>
+        <button :class="filter==='GearSetup' ? 'nav active' : 'nav'" @click="goTo('GearSetup','gear-section')">Baby gear</button>
+        <button :class="filter==='MomSetup' ? 'nav active' : 'nav'" @click="goTo('MomSetup','mom-section')">Mom</button>
         <button class="nav opacity-50">Paperwork</button>
-        <button class="nav opacity-50">Tips &amp; tricks</button>
+        <button :class="filter==='TipsSetup' ? 'nav active' : 'nav'" @click="goTo('TipsSetup','tips-section')">Tips &amp; tricks</button>
         <button class="nav opacity-50">How to take care of your baby</button>
         <button class="nav opacity-50">Hospital bag</button>
         <button class="nav opacity-50">Other</button>
         <button class="nav opacity-50">Cost estimate</button>
       </nav>
+      <div class="mt-auto rounded-2xl bg-blush-50 p-4 text-sm">
+        <div class="flex items-center gap-2"><span class="flex h-8 w-8 items-center justify-center rounded-full bg-blush-200 text-xs font-bold text-blush-700">{{ username[0]|upper }}</span><span class="font-semibold">{{ username }}</span></div>
+        <div class="mt-2 flex items-center gap-3 text-xs">
+          <a href="/settings" class="font-medium text-blush-700 hover:text-blush-600">Baby details</a>
+          <span class="text-stone-300">·</span>
+          <form method="post" action="/logout"><button class="text-stone-500 transition hover:text-rose-600">Log out</button></form>
+        </div>
+      </div>
     </aside>
 
     <main class="min-w-0 flex-1">
-      <header class="sticky top-0 z-10 border-b border-blush-100 bg-[#fbf8f7]/90 px-5 py-4 backdrop-blur md:px-8">
+      <header class="sticky top-0 z-10 border-b border-blush-100 bg-page/90 px-5 py-4 backdrop-blur md:px-8">
         <div class="mx-auto flex max-w-7xl items-center justify-between">
           <div>
-            <div class="text-xs font-medium uppercase tracking-[.18em] text-stone-400">Baby • Winter arrival</div>
+            <div class="text-xs font-medium uppercase tracking-[.18em] text-stone-400">Baby • {{ season_label }} arrival{% if days_to_due is not none %} · due in {{ days_to_due }} days{% endif %}</div>
             <h2 class="mt-1 text-xl font-semibold">The first wardrobe</h2>
           </div>
           <div class="flex items-center gap-2 rounded-full border border-blush-200 bg-white px-3 py-1.5 text-sm shadow-sm">
@@ -61,28 +82,38 @@
         <section class="grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
           <div class="overflow-hidden rounded-3xl border border-blush-100 bg-white p-6 shadow-soft md:p-8">
             <div class="max-w-2xl">
-              <div class="mb-3 inline-flex rounded-full bg-blush-50 px-3 py-1 text-xs font-medium text-blush-700">WINTER CAPSULE</div>
-              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">Seven days of outfits for our lovely <br><span class="text-blush-600">Ussua</span></h3>
+              <div class="mb-3 inline-flex rounded-full bg-blush-50 px-3 py-1 text-xs font-medium text-blush-700">{{ season_label|upper }} CAPSULE</div>
+              {% if arrived %}
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is here 🎉</h3>
+              <p class="mt-4 text-lg leading-8 text-stone-500">Everything is ready — enjoy the first days together.</p>
+              {% else %}
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is almost here {{ season_emoji }}</h3>
+              <p class="mt-4 text-lg leading-8 text-stone-500">Let's plan gently, one category at a time.</p>
+              {% endif %}
               <div class="mt-6 flex flex-wrap gap-2 text-xs text-stone-600">
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Base → body</span>
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Day → romper / trousers</span>
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Layer → cardigan</span>
-                <span class="rounded-full bg-stone-100 px-3 py-1.5">Night → sleepsuit + sleep bag</span>
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">✓ no overspending</span>
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">✓ no panic-lists</span>
               </div>
             </div>
           </div>
           <div class="rounded-3xl bg-blush-500 p-6 text-white shadow-soft">
-            <div class="text-sm font-medium text-white/80">Planning principle</div>
-            <div class="mt-2 text-2xl font-semibold">1 extra clothing layer</div>
-            <p class="mt-3 text-sm leading-6 text-white/85">A practical winter starting point is one more layer than an adult would wear. Adjust for the room, weather and your baby's temperature rather than dressing by a fixed outfit formula.</p>
-            <p class="mt-3 text-sm leading-6 text-white/85">When buying rompers and bodysuits, prefer styles with a zip (or a double zip) rather than buttons; if zip bodysuits aren't available, choose ones with front or crotch snaps/buttons — avoid pull‑over‑the‑head designs where possible to make dressing and nappy changes easier for Ussua and for mum.</p>
-            <div class="mt-5 border-t border-white/20 pt-4 text-xs text-white/75">For sleep, keep the sleep setup separate from daytime layering.</div>
+            <div class="text-sm font-medium text-white/80">Baby now</div>
+            {% if baby_now %}
+            <div class="mt-4 flex items-center justify-center rounded-2xl bg-white/15 py-8 text-6xl">{{ baby_now.emoji }}</div>
+            <div class="mt-4 text-xl font-semibold leading-snug">{{ baby_now.title }}</div>
+            <p class="mt-2 text-sm leading-6 text-white/85">{{ baby_now.text }}</p>
+            <div class="mt-5 border-t border-white/20 pt-4 text-xs text-white/80">{{ baby_now.footer }}</div>
+            {% else %}
+            <div class="mt-4 flex items-center justify-center rounded-2xl bg-white/15 py-8 text-6xl">🌸</div>
+            <div class="mt-4 text-xl font-semibold leading-snug">Your little one is on the way</div>
+            <p class="mt-2 text-sm leading-6 text-white/85">Set a due date in Baby details to see how big they are right now.</p>
+            <div class="mt-5 border-t border-white/20 pt-4 text-xs"><a href="/settings" class="text-white/90 underline decoration-white/40 underline-offset-2 hover:decoration-white">Add due date →</a></div>
+            {% endif %}
           </div>
         </section>
 
-        <section class="grid gap-4 md:grid-cols-3">
+        <section class="grid gap-4 md:grid-cols-2">
           <div class="card"><div class="label">Starter targets</div><div class="mt-1 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3"><div><div class="metric" x-text="wardrobeTargets"></div><div class="muted" x-text="sizeFilter==='All' ? 'clothing pieces · across sizes' : 'clothing pieces · size ' + sizeLabel(sizeFilter)"></div></div><div><div class="metric" x-text="sleepTargets"></div><div class="muted">sleep pieces</div></div><div><div class="metric" x-text="careTargets"></div><div class="muted">care pieces</div></div><div><div class="metric" x-text="gearTargets"></div><div class="muted">gear pieces</div></div><div><div class="metric" x-text="leisureTargets"></div><div class="muted">leisure pieces</div></div><div><div class="metric" x-text="momTargets"></div><div class="muted">mom pieces</div></div></div></div>
-          <div class="card"><div class="label">Laundry cadence</div><div class="metric"><span x-text="laundryDays"></span> days</div><input type="range" min="3" max="7" x-model.number="laundryDays" class="mt-3 w-full accent-[rgb(215,131,121)]"><div class="muted">Use this to tune quantities later.</div></div>
           <div class="card"><div class="label">Sizes</div><div class="mt-2 flex flex-wrap items-center gap-2"><div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm"><template x-for="s in ['All','50','56','62']"><button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="sizeLabel(s)"></button></template></div><div class="flex rounded-xl border border-stone-200 bg-white p-1 text-xs shadow-sm"><template x-for="sys in ['EU','US']"><button @click="setSizeSystem(sys)" :class="sizeSystem===sys ? 'bg-stone-700 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-2 py-1 transition" x-text="sys"></button></template></div></div><div class="muted" x-text="sizesCardHint"></div></div>
         </section>
 
@@ -141,7 +172,7 @@
             </div>
         {% endmacro %}
 
-        <section id="wardrobe-section" class="scroll-mt-24" x-show="filter!=='SleepSetup' && filter!=='CareSetup' && filter!=='GearSetup' && filter!=='LeisureSetup' && filter!=='MomSetup'">
+        <section id="wardrobe-section" class="scroll-mt-24" x-show="filter!=='SleepSetup' && filter!=='CareSetup' && filter!=='GearSetup' && filter!=='LeisureSetup' && filter!=='MomSetup' && filter!=='TipsSetup'">
           <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
               <div class="section-kicker">01 / Wardrobe map</div>
@@ -176,7 +207,7 @@
           </div>
         </section>
 
-        <section class="grid gap-5 lg:grid-cols-[1.15fr_.85fr]" x-show="filter!=='SleepSetup' && filter!=='CareSetup' && filter!=='GearSetup' && filter!=='LeisureSetup' && filter!=='MomSetup'">
+        <section class="grid gap-5 lg:grid-cols-[1.15fr_.85fr]" x-show="filter!=='SleepSetup' && filter!=='CareSetup' && filter!=='GearSetup' && filter!=='LeisureSetup' && filter!=='MomSetup' && filter!=='TipsSetup'">
           <div class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
             <div class="section-kicker">02 / Outfit builder</div>
             <div class="flex items-end justify-between gap-3"><div><h3 class="section-title">Mix & match</h3><p class="mt-1 text-sm text-stone-500">Tap a recipe to see the logic behind the wardrobe.</p></div><button @click="customOpen=!customOpen" class="rounded-xl border border-blush-200 px-3 py-2 text-xs font-medium text-blush-700 hover:bg-blush-50">Build custom</button></div>
@@ -323,8 +354,37 @@
           </div>
         </section>
 
+        <section id="tips-section" class="scroll-mt-24" x-show="filter==='All' || filter==='TipsSetup'">
+          <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <div class="section-kicker">08 / Tips &amp; tricks</div>
+              <h3 class="section-title">Little things that help</h3>
+              <p class="mt-2 text-sm text-stone-500">Short, practical wisdom — collected from experienced parents and official guidance.</p>
+            </div>
+            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+              <template x-for="tab in ['All','Clothing','Sleep']">
+                <button @click="tipsFilter=tab" :class="tipsFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
+              </template>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {% for tip in tips %}
+            <div x-show="tipsFilter === 'All' || tipsFilter === '{{ tip.group }}'" class="flex flex-col rounded-2xl border border-blush-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
+              <div class="flex items-center gap-3">
+                <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blush-50 text-xl">{{ tip.icon }}</div>
+                <div class="font-semibold">{{ tip.title }}</div>
+              </div>
+              <p class="mt-3 flex-1 text-sm leading-6 text-stone-600">{{ tip.text }}</p>
+              <div class="mt-3 border-t border-stone-100 pt-3 text-[11px] text-stone-400">
+                {% if tip.source %}<span class="rounded-full bg-blush-50 px-2 py-0.5 font-medium text-blush-700">{{ tip.source }}</span>{% else %}{{ tip.group }} tip{% endif %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
         <section class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
-          <div class="section-kicker">08 / Shopping strategy</div>
+          <div class="section-kicker">09 / Shopping strategy</div>
           <h3 class="section-title">Spend where quality matters</h3>
           <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-500">Use your higher-quality budget for the pieces that touch skin all day or get washed constantly. Pick the brands you want to hunt for — these pools feed the clothing cards. Diapering, sleep, gear and leisure cards each have their own brand suggestions.</p>
           <div class="mt-5 grid gap-5 lg:grid-cols-2">
@@ -358,20 +418,18 @@
             <div class="mt-3 text-xs text-stone-400">NHS: “How to dress a newborn” • NHS: “What you’ll need for your baby” • Sanetta size guide</div>
           </div>
         </section>
-
-        <footer class="pb-8 text-xs text-stone-400">Saved in this browser · This MVP is intentionally easy to extend into nursery, feeding, bathing, travel and Mom categories.</footer>
       </div>
     </main>
   </div>
 
   <style>
-    .nav{display:flex;width:100%;align-items:center;gap:.5rem;border-radius:.75rem;padding:.65rem .75rem;color:#6b6565;text-align:left}.nav.active{background:#fcefed;color:#985650;font-weight:600}
-    .brand-scroll{scrollbar-width:thin;scrollbar-color:#f2c4bd transparent}
+    .nav{display:flex;width:100%;align-items:center;gap:.5rem;border-radius:.75rem;padding:.65rem .75rem;color:#6b6565;text-align:left}.nav.active{background:rgb(var(--b100));color:rgb(var(--b700));font-weight:600}
+    .brand-scroll{scrollbar-width:thin;scrollbar-color:rgb(var(--b300)) transparent}
     .brand-scroll::-webkit-scrollbar{width:6px}
-    .brand-scroll::-webkit-scrollbar-thumb{background:#f2c4bd;border-radius:9999px}
+    .brand-scroll::-webkit-scrollbar-thumb{background:rgb(var(--b300));border-radius:9999px}
     .brand-scroll::-webkit-scrollbar-track{background:transparent}
-    .card{border:1px solid #f8ddd8;background:#fff;border-radius:1.5rem;padding:1.25rem;box-shadow:0 10px 30px rgba(66,42,42,.05)}
-    .label,.section-kicker{font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#b58c88}.metric{margin-top:.35rem;font-size:1.7rem;font-weight:650;letter-spacing:-.02em}.muted{margin-top:.2rem;font-size:.75rem;line-height:1.35rem;color:#857d7d}.section-title{margin-top:.2rem;font-size:1.5rem;font-weight:650;letter-spacing:-.02em}
+    .card{border:1px solid rgb(var(--b200));background:#fff;border-radius:1.5rem;padding:1.25rem;box-shadow:0 10px 30px rgba(var(--shadow-rgb),.05)}
+    .label,.section-kicker{font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--kicker))}.metric{margin-top:.35rem;font-size:1.7rem;font-weight:650;letter-spacing:-.02em}.muted{margin-top:.2rem;font-size:.75rem;line-height:1.35rem;color:#857d7d}.section-title{margin-top:.2rem;font-size:1.5rem;font-weight:650;letter-spacing:-.02em}
   </style>
 
   <script>
@@ -396,29 +454,78 @@
         for (const it of items) categoryOf[it.id] = cat;
       }
       // counts are per size: {itemId: {size: owned}}; sleep gear uses "_".
-      const defaults={body:{50:2},sleep:{50:2},romper:{50:1},trousers:{50:1},cardigan:{56:1},top:{56:1},knitromper:{56:1},socks:{50:3},hat:{50:1}};
-      const savedRaw=JSON.parse(localStorage.getItem('babyWardrobeCounts')||'null');
-      // Older saves were flat {itemId: owned}; move those numbers to the item's
-      // smallest size so nothing gets lost.
-      function migrate(saved){
-        const out={};
-        for(const k of Object.keys(saved||{})){
-          const v=saved[k];
-          if(v && typeof v==='object'){ out[k]=v; continue; }
-          const it=allItems.find(i=>i.id===k);
-          if(!it) continue;
-          if(it.size_targets){ out[k]={[ (it.sizes&&it.sizes[0]) || '50' ]:v}; }
-          else { out[k]={_:v}; }
-        }
-        return out;
-      }
-      const counts=savedRaw?migrate(savedRaw):defaults;
+      // New accounts start with everything at zero — owned items are added
+      // per account on the server.
+      const counts={};
       return {
-        filter:'All', sleepFilter:'All', careFilter:'All', momFilter:'All', sizeFilter:'All', sizeSystem:localStorage.getItem('sizeSystem')||'EU', laundryDays:Number(localStorage.getItem('laundryDays')||5), selectedOutfit:0, customOpen:false,
+        filter:'All', sleepFilter:'All', careFilter:'All', momFilter:'All', tipsFilter:'All', sizeFilter:'All', sizeSystem:'EU', selectedOutfit:0, customOpen:false,
         counts,
+        async hydrate(){
+          // Load this account's state from the server. On the very first load
+          // after the multi-user switch, adopt whatever this browser still has
+          // in localStorage so no existing data is lost.
+          try{
+            const r=await fetch('/api/state');
+            if(!r.ok) return;
+            const s=await r.json();
+            const legacy=Object.keys(s).length===0 && !localStorage.getItem('babyStateMigrated');
+            if(legacy){
+              const rawCounts=JSON.parse(localStorage.getItem('babyWardrobeCounts')||'null');
+              if(rawCounts){
+                const fixed={};
+                for(const k of Object.keys(rawCounts)){
+                  const v=rawCounts[k];
+                  if(v && typeof v==='object'){ fixed[k]=v; continue; }
+                  const it=allItems.find(i=>i.id===k);
+                  if(!it) continue;
+                  if(it.size_targets){ fixed[k]={[ (it.sizes&&it.sizes[0]) || '50' ]:v}; }
+                  else { fixed[k]={_:v}; }
+                }
+                this.counts=fixed; s.counts=fixed;
+              }
+              const links=JSON.parse(localStorage.getItem('babyItemLinks')||'null');
+              if(links){ this.userLinks=links; s.links=links; }
+              const brands=JSON.parse(localStorage.getItem('babyBrands')||'null');
+              if(brands){ this.brands=brands; s.brands=brands; }
+              const sys=localStorage.getItem('sizeSystem');
+              if(sys){ this.sizeSystem=sys; s.sizeSystem=sys; }
+              const th=localStorage.getItem('babyTheme');
+              if(th){ s.theme=th; }
+              localStorage.setItem('babyStateMigrated','1');
+              await this.pushState();
+            } else {
+              if(s.counts) this.counts=s.counts;
+              if(s.links) this.userLinks=s.links;
+              if(s.brands) this.brands=s.brands;
+              if(s.sizeSystem) this.sizeSystem=s.sizeSystem;
+              if(s.theme && s.theme!==document.documentElement.dataset.theme){
+                document.documentElement.dataset.theme=s.theme;
+              }
+            }
+          }catch(e){}
+        },
+        queueSave(){
+          clearTimeout(this._saveTimer);
+          this._saveTimer=setTimeout(()=>this.pushState(), 600);
+        },
+        async pushState(){
+          try{
+            await fetch('/api/state', {
+              method:'POST',
+              headers:{'Content-Type':'application/json'},
+              body: JSON.stringify({
+                counts:this.counts,
+                links:this.userLinks,
+                brands:this.brands,
+                sizeSystem:this.sizeSystem,
+                theme: document.documentElement.dataset.theme || 'peach',
+              }),
+            });
+          }catch(e){}
+        },
         US_SIZES:{'50':'NB','56':'0–3M','62':'3–6M'},
         sizeLabel(s){ return s==='All' ? 'All' : (this.sizeSystem==='US' ? (this.US_SIZES[s]||s) : s) },
-        setSizeSystem(sys){ this.sizeSystem=sys; localStorage.setItem('sizeSystem',sys) },
+        setSizeSystem(sys){ this.sizeSystem=sys; this.save() },
         outfits: {{ outfits|tojson }},
         wardrobe: wardrobeData,
         sleep: sleepData,
@@ -426,17 +533,11 @@
         gear: gearData,
         leisure: leisureData,
         mom: momData,
-        clothingCount(){ return (this.wardrobe || []).length },
-        sleepCount(){ return (this.sleep || []).length },
-        careCount(){ return (this.care || []).length },
-        gearCount(){ return (this.gear || []).length },
-        leisureCount(){ return (this.leisure || []).length },
-        momCount(){ return (this.mom || []).length },
-        userLinks:JSON.parse(localStorage.getItem('babyItemLinks')||'{}'),
+        userLinks:{},
         linkEdit:null, linkDraft:'',
         brandTiers: {{ brand_tiers|tojson }},
         categoryBrands: {{ category_brands|tojson }},
-        brands: JSON.parse(localStorage.getItem('babyBrands')||'null') || {picked:{quality:['Sanetta'],value:['Little Dutch','Mayoral']}, custom:{quality:[],value:[]}, items:{}},
+        brands: {picked:{quality:[],value:[]}, custom:{quality:[],value:[]}, items:{}},
         brandDraft:{quality:'', value:''},
         tierBrands(tid){ const t=this.brandTiers.find(t=>t.id===tid); return t ? t.brands.concat(this.brands.custom[tid]||[]) : []; },
         isPicked(tid,b){ return (this.brands.picked[tid]||[]).includes(b); },
@@ -453,7 +554,7 @@
           this.brandDraft[tid]='';
           this.saveBrands();
         },
-        saveBrands(){ localStorage.setItem('babyBrands', JSON.stringify(this.brands)); },
+        saveBrands(){ this.save() },
         brandFor(id){ return this.brands.items[id] ?? ((this.itemById(id)||{}).brand ?? ''); },
         setItemBrand(id,v){ this.brands.items={...this.brands.items, [id]:v}; this.saveBrands(); },
         brandMenu:null, brandQuery:'',
@@ -483,13 +584,13 @@
           const v=(this.linkDraft||'').trim();
           const {[id]:_drop, ...rest}=this.userLinks;
           this.userLinks = v ? {...rest, [id]:v} : rest;
-          localStorage.setItem('babyItemLinks', JSON.stringify(this.userLinks));
+          this.save();
           this.linkEdit=null;
         },
         clearLink(id){
           const {[id]:_drop, ...rest}=this.userLinks;
           this.userLinks=rest;
-          localStorage.setItem('babyItemLinks', JSON.stringify(this.userLinks));
+          this.save();
         },
         itemById(id){ return allItems.find(i=>i.id===id) },
         inSize(id){
@@ -540,7 +641,7 @@
           const c={...(this.counts[id]||{})};
           c[s]=Math.max(0,(c[s]||0)-1); this.counts[id]=c; this.save();
         },
-        save(){localStorage.setItem('babyWardrobeCounts',JSON.stringify(this.counts));localStorage.setItem('laundryDays',this.laundryDays)},
+        save(){ this.queueSave() },
         goTo(view, sectionId){
           this.filter = view;
           setTimeout(() => {
