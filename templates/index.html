@@ -37,12 +37,6 @@
         <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blush-600"><span class="h-2 w-2 rounded-full bg-blush-400"></span> NEST / BABY PREP</div>
         <h1 class="text-2xl font-semibold tracking-tight">Baby prep</h1>
         <p class="mt-1 text-sm text-stone-500">A visual shopping planner.</p>
-        <div class="mt-3 flex items-center gap-2">
-          <span class="text-[11px] font-bold uppercase tracking-[.14em]" style="color:rgb(var(--kicker))">Theme</span>
-          <template x-for="t in themes" :key="t.id">
-            <button @click="setTheme(t.id)" :title="t.label" :class="theme===t.id ? 'ring-2 ring-blush-500 ring-offset-2' : 'hover:scale-110'" :style="`background:rgb(${t.rgb})`" class="h-5 w-5 rounded-full border border-black/5 transition"></button>
-          </template>
-        </div>
       </div>
       <nav class="space-y-1 text-sm">
         <button :class="filter==='All' ? 'nav active' : 'nav'" @click="goTo('All')">Overview</button>
@@ -483,18 +477,6 @@
         brandFor(id){ return this.brands.items[id] ?? ((this.itemById(id)||{}).brand ?? ''); },
         setItemBrand(id,v){ this.brands.items={...this.brands.items, [id]:v}; this.saveBrands(); },
         brandMenu:null, brandQuery:'',
-        themes:[
-          {id:'peach', label:'Peach', rgb:'215 131 121'},
-          {id:'ocean', label:'Dusty blue', rgb:'95 167 176'},
-          {id:'burgundy', label:'Dusty burgundy', rgb:'188 107 114'},
-          {id:'prune', label:'Soft prune', rgb:'166 120 183'},
-        ],
-        theme: localStorage.getItem('babyTheme') || 'peach',
-        setTheme(id){
-          this.theme=id;
-          localStorage.setItem('babyTheme', id);
-          document.documentElement.dataset.theme=id;
-        },
         openBrandMenu(id){ this.brandMenu=id; this.brandQuery=''; },
         filteredBrandOptions(id){
           const q=(this.brandQuery||'').trim().toLowerCase();
