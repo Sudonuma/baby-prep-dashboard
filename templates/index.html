@@ -41,12 +41,12 @@
       </div>
       <nav class="space-y-1 text-sm">
         <button :class="filter==='All' ? 'nav active' : 'nav'" @click="goTo('All')">Overview</button>
-        <button :class="filter==='Clothing' ? 'nav active' : 'nav'" @click="goTo('Clothing','wardrobe-section')">Baby clothing <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="clothingCount()"></span></button>
-        <button :class="filter==='SleepSetup' ? 'nav active' : 'nav'" @click="goTo('SleepSetup','sleep-section')">Sleep <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="sleepCount()"></span></button>
-        <button :class="filter==='CareSetup' ? 'nav active' : 'nav'" @click="goTo('CareSetup','care-section')">Diapering &amp; bath &amp; care <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="careCount()"></span></button>
-        <button :class="filter==='LeisureSetup' ? 'nav active' : 'nav'" @click="goTo('LeisureSetup','leisure-section')">Leisure <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="leisureCount()"></span></button>
-        <button :class="filter==='GearSetup' ? 'nav active' : 'nav'" @click="goTo('GearSetup','gear-section')">Baby gear <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="gearCount()"></span></button>
-        <button :class="filter==='MomSetup' ? 'nav active' : 'nav'" @click="goTo('MomSetup','mom-section')">Mom <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="momCount()"></span></button>
+        <button :class="filter==='Clothing' ? 'nav active' : 'nav'" @click="goTo('Clothing','wardrobe-section')">Baby clothing</button>
+        <button :class="filter==='SleepSetup' ? 'nav active' : 'nav'" @click="goTo('SleepSetup','sleep-section')">Sleep</button>
+        <button :class="filter==='CareSetup' ? 'nav active' : 'nav'" @click="goTo('CareSetup','care-section')">Diapering &amp; bath &amp; care</button>
+        <button :class="filter==='LeisureSetup' ? 'nav active' : 'nav'" @click="goTo('LeisureSetup','leisure-section')">Leisure</button>
+        <button :class="filter==='GearSetup' ? 'nav active' : 'nav'" @click="goTo('GearSetup','gear-section')">Baby gear</button>
+        <button :class="filter==='MomSetup' ? 'nav active' : 'nav'" @click="goTo('MomSetup','mom-section')">Mom</button>
         <button class="nav opacity-50">Paperwork</button>
         <button class="nav opacity-50">Tips &amp; tricks</button>
         <button class="nav opacity-50">How to take care of your baby</button>
@@ -500,12 +500,6 @@
         gear: gearData,
         leisure: leisureData,
         mom: momData,
-        clothingCount(){ return (this.wardrobe || []).length },
-        sleepCount(){ return (this.sleep || []).length },
-        careCount(){ return (this.care || []).length },
-        gearCount(){ return (this.gear || []).length },
-        leisureCount(){ return (this.leisure || []).length },
-        momCount(){ return (this.mom || []).length },
         userLinks:{},
         linkEdit:null, linkDraft:'',
         brandTiers: {{ brand_tiers|tojson }},
