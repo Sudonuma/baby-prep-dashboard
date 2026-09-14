@@ -1,0 +1,598 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Baby Winter Wardrobe</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: {
+          blush: {50:'#fff8f7',100:'#fcefed',200:'#f8ddd8',300:'#f2c4bd',400:'#e8a69c',500:'#d78379',600:'#b96861',700:'#985650'},
+          ink: '#362f30', cream:'#fffdfb'
+        },
+        boxShadow: { soft:'0 10px 30px rgba(66, 42, 42, .07)' }
+      }}
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-[#fbf8f7] text-ink" x-data="wardrobeApp()">
+  <div class="flex min-h-screen">
+    <aside class="hidden w-64 shrink-0 border-r border-blush-100 bg-white/80 px-5 py-6 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:overflow-y-auto">
+      <div class="mb-8">
+        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blush-600"><span class="h-2 w-2 rounded-full bg-blush-400"></span> NEST / WINTER BABY</div>
+        <h1 class="text-2xl font-semibold tracking-tight">Baby prep</h1>
+        <p class="mt-1 text-sm text-stone-500">A visual shopping planner.</p>
+      </div>
+      <nav class="space-y-1 text-sm">
+        <button :class="filter==='All' ? 'nav active' : 'nav'" @click="goTo('All')">Overview</button>
+        <button :class="filter==='Clothing' ? 'nav active' : 'nav'" @click="goTo('Clothing','wardrobe-section')">Baby clothing <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="clothingCount()"></span></button>
+        <button :class="filter==='SleepSetup' ? 'nav active' : 'nav'" @click="goTo('SleepSetup','sleep-section')">Sleep <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="sleepCount()"></span></button>
+        <button :class="filter==='CareSetup' ? 'nav active' : 'nav'" @click="goTo('CareSetup','care-section')">Diapering &amp; bath &amp; care <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="careCount()"></span></button>
+        <button :class="filter==='LeisureSetup' ? 'nav active' : 'nav'" @click="goTo('LeisureSetup','leisure-section')">Leisure <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="leisureCount()"></span></button>
+        <button :class="filter==='GearSetup' ? 'nav active' : 'nav'" @click="goTo('GearSetup','gear-section')">Baby gear <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="gearCount()"></span></button>
+        <button :class="filter==='MomSetup' ? 'nav active' : 'nav'" @click="goTo('MomSetup','mom-section')">Mom <span class="ml-auto rounded-full bg-blush-100 px-2 py-0.5 text-xs text-blush-700" x-text="momCount()"></span></button>
+        <button class="nav opacity-50">Paperwork</button>
+        <button class="nav opacity-50">Tips &amp; tricks</button>
+        <button class="nav opacity-50">How to take care of your baby</button>
+        <button class="nav opacity-50">Hospital bag</button>
+        <button class="nav opacity-50">Other</button>
+        <button class="nav opacity-50">Cost estimate</button>
+      </nav>
+    </aside>
+
+    <main class="min-w-0 flex-1">
+      <header class="sticky top-0 z-10 border-b border-blush-100 bg-[#fbf8f7]/90 px-5 py-4 backdrop-blur md:px-8">
+        <div class="mx-auto flex max-w-7xl items-center justify-between">
+          <div>
+            <div class="text-xs font-medium uppercase tracking-[.18em] text-stone-400">Baby • Winter arrival</div>
+            <h2 class="mt-1 text-xl font-semibold">The first wardrobe</h2>
+          </div>
+          <div class="flex items-center gap-2 rounded-full border border-blush-200 bg-white px-3 py-1.5 text-sm shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-blush-400"></span>
+            <span x-text="progress + '% ready'"></span>
+          </div>
+        </div>
+      </header>
+
+      <div class="mx-auto max-w-7xl space-y-7 px-5 py-7 md:px-8">
+        <section class="grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
+          <div class="overflow-hidden rounded-3xl border border-blush-100 bg-white p-6 shadow-soft md:p-8">
+            <div class="max-w-2xl">
+              <div class="mb-3 inline-flex rounded-full bg-blush-50 px-3 py-1 text-xs font-medium text-blush-700">WINTER CAPSULE</div>
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">Seven days of outfits for our lovely <br><span class="text-blush-600">Ussua</span></h3>
+              <div class="mt-6 flex flex-wrap gap-2 text-xs text-stone-600">
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">Base → body</span>
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">Day → romper / trousers</span>
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">Layer → cardigan</span>
+                <span class="rounded-full bg-stone-100 px-3 py-1.5">Night → sleepsuit + sleep bag</span>
+              </div>
+            </div>
+          </div>
+          <div class="rounded-3xl bg-blush-500 p-6 text-white shadow-soft">
+            <div class="text-sm font-medium text-white/80">Planning principle</div>
+            <div class="mt-2 text-2xl font-semibold">1 extra clothing layer</div>
+            <p class="mt-3 text-sm leading-6 text-white/85">A practical winter starting point is one more layer than an adult would wear. Adjust for the room, weather and your baby's temperature rather than dressing by a fixed outfit formula.</p>
+            <p class="mt-3 text-sm leading-6 text-white/85">When buying rompers and bodysuits, prefer styles with a zip (or a double zip) rather than buttons; if zip bodysuits aren't available, choose ones with front or crotch snaps/buttons — avoid pull‑over‑the‑head designs where possible to make dressing and nappy changes easier for Ussua and for mum.</p>
+            <div class="mt-5 border-t border-white/20 pt-4 text-xs text-white/75">For sleep, keep the sleep setup separate from daytime layering.</div>
+          </div>
+        </section>
+
+        <section class="grid gap-4 md:grid-cols-3">
+          <div class="card"><div class="label">Starter targets</div><div class="mt-1 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3"><div><div class="metric" x-text="wardrobeTargets"></div><div class="muted" x-text="sizeFilter==='All' ? 'clothing pieces · across sizes' : 'clothing pieces · size ' + sizeLabel(sizeFilter)"></div></div><div><div class="metric" x-text="sleepTargets"></div><div class="muted">sleep pieces</div></div><div><div class="metric" x-text="careTargets"></div><div class="muted">care pieces</div></div><div><div class="metric" x-text="gearTargets"></div><div class="muted">gear pieces</div></div><div><div class="metric" x-text="leisureTargets"></div><div class="muted">leisure pieces</div></div><div><div class="metric" x-text="momTargets"></div><div class="muted">mom pieces</div></div></div></div>
+          <div class="card"><div class="label">Laundry cadence</div><div class="metric"><span x-text="laundryDays"></span> days</div><input type="range" min="3" max="7" x-model.number="laundryDays" class="mt-3 w-full accent-[rgb(215,131,121)]"><div class="muted">Use this to tune quantities later.</div></div>
+          <div class="card"><div class="label">Sizes</div><div class="mt-2 flex flex-wrap items-center gap-2"><div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm"><template x-for="s in ['All','50','56','62']"><button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="sizeLabel(s)"></button></template></div><div class="flex rounded-xl border border-stone-200 bg-white p-1 text-xs shadow-sm"><template x-for="sys in ['EU','US']"><button @click="setSizeSystem(sys)" :class="sizeSystem===sys ? 'bg-stone-700 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-2 py-1 transition" x-text="sys"></button></template></div></div><div class="muted" x-text="sizesCardHint"></div></div>
+        </section>
+
+        {% macro item_card(item, visible='') %}
+            <div {% if visible %}x-show="{{ visible }}"{% endif %} class="rounded-2xl border border-blush-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
+              <div class="flex items-start justify-between gap-3">
+                <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blush-50 text-2xl">{{ item.icon }}</div>
+                <span class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500">{{ item.type }}</span>
+              </div>
+              <div class="mt-4 font-semibold">{{ item.name }}</div>
+              <div class="relative mt-1">
+                <input type="text" :value="brandFor('{{ item.id }}')" @focus="openBrandMenu('{{ item.id }}')" @click="openBrandMenu('{{ item.id }}')" @input="brandQuery=$event.target.value; brandMenu='{{ item.id }}'" @change="setItemBrand('{{ item.id }}', $event.target.value); brandMenu=null" @blur="brandMenu=null" @keydown.escape="brandMenu=null" placeholder="Brand" class="w-full rounded-lg border border-transparent bg-blush-50/60 px-2 py-1 text-xs text-blush-700 outline-none transition placeholder:text-stone-300 focus:border-blush-300 focus:bg-white">
+                <div x-show="brandMenu==='{{ item.id }}'" x-transition.opacity.duration.100ms class="brand-scroll absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-blush-200 bg-white py-1 shadow-lg shadow-blush-700/10">
+                  <template x-for="b in filteredBrandOptions('{{ item.id }}')" :key="b">
+                    <button type="button" @mousedown.prevent="chooseBrand('{{ item.id }}', b)" class="block w-full px-3 py-1.5 text-left text-xs text-stone-600 transition hover:bg-blush-50 hover:pl-3.5 hover:text-blush-700" x-text="b"></button>
+                  </template>
+                  <div x-show="filteredBrandOptions('{{ item.id }}').length===0" class="px-3 py-2 text-xs italic text-stone-400">Nothing matched — your own brand is kept as typed</div>
+                </div>
+              </div>
+              <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                <a x-show="linkFor('{{ item.id }}')" :href="linkFor('{{ item.id }}')" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-full bg-blush-50 px-2 py-1 font-medium text-blush-700 transition hover:bg-blush-200">🔗 <span>Buy</span></a>
+                <button x-show="linkFor('{{ item.id }}') && linkEdit!=='{{ item.id }}'" @click="editLink('{{ item.id }}')" class="text-[11px] text-stone-400 transition hover:text-blush-600">edit</button>
+                <button x-show="!linkFor('{{ item.id }}') && linkEdit!=='{{ item.id }}'" @click="editLink('{{ item.id }}')" class="inline-flex items-center gap-1 rounded-full border border-dashed border-stone-300 px-2 py-1 text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ link</button>
+                <button x-show="userLinks['{{ item.id }}'] && linkEdit!=='{{ item.id }}'" @click="clearLink('{{ item.id }}')" class="text-[11px] text-stone-400 transition hover:text-rose-500">remove</button>
+              </div>
+              <div class="mt-2 flex gap-1.5" x-show="linkEdit==='{{ item.id }}'">
+                <input type="url" x-model="linkDraft" @keydown.enter="saveLink('{{ item.id }}')" placeholder="Paste product link (https://…)" class="min-w-0 flex-1 rounded-lg border border-blush-200 bg-white px-2 py-1.5 text-xs">
+                <button @click="saveLink('{{ item.id }}')" class="rounded-lg bg-blush-500 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Save</button>
+              </div>
+              {% if item.preferred_colors %}
+              <div class="mt-2 flex flex-wrap gap-2">
+                {% for c in item.preferred_colors %}
+                <span class="text-[11px] rounded-full border px-2 py-0.5 bg-stone-50 text-stone-600">{{ c }}</span>
+                {% endfor %}
+              </div>
+              {% endif %}
+              <p class="mt-2 min-h-10 text-xs leading-5 text-stone-500">{{ item.note }}</p>
+              {% if item.size_targets %}
+              <div class="mt-4 flex items-end justify-between border-t border-stone-100 pt-4">
+                <div><div class="text-[11px] text-stone-400" x-text="sizeFilter==='All' ? 'Target · all sizes' : 'Target · size ' + sizeLabel(sizeFilter)"></div><div class="font-semibold"><span x-text="cardTarget('{{ item.id }}')"></span> {{ item.unit }}</div></div>
+                <div class="flex items-center gap-1 rounded-xl bg-stone-50 p-1" x-show="sizeFilter!=='All'"><button @click="dec('{{ item.id }}')" class="h-8 w-8 rounded-lg text-lg text-stone-500 hover:bg-white">−</button><div class="w-7 text-center text-sm font-semibold" x-text="countFor('{{ item.id }}')"></div><button @click="inc('{{ item.id }}')" class="h-8 w-8 rounded-lg bg-white text-blush-600 shadow-sm hover:bg-blush-50">+</button></div>
+              </div>
+              <div class="mt-3 flex flex-wrap gap-1.5" x-show="sizeFilter==='All'">
+                <template x-for="s in (itemById('{{ item.id }}') || {}).sizes || []" :key="s">
+                  <button @click="sizeFilter=s" class="rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600 transition hover:border-blush-300 hover:text-blush-700" x-text="sizeLabel(s) + ': ' + ((counts['{{ item.id }}'] || {})[s] || 0) + '/' + (((itemById('{{ item.id }}') || {}).size_targets || {})[s] || 0)"></button>
+                </template>
+              </div>
+              <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-100"><div class="h-full rounded-full bg-blush-300 transition-all" :style="`width:${barPct('{{ item.id }}')}%`"></div></div>
+              {% else %}
+              <div class="mt-4 flex items-end justify-between border-t border-stone-100 pt-4">
+                <div><div class="text-[11px] text-stone-400">Target</div><div class="font-semibold">{{ item.target }} {{ item.unit }}</div></div>
+                <div class="flex items-center gap-1 rounded-xl bg-stone-50 p-1"><button @click="dec('{{ item.id }}')" class="h-8 w-8 rounded-lg text-lg text-stone-500 hover:bg-white">−</button><div class="w-7 text-center text-sm font-semibold" x-text="(counts['{{ item.id }}'] || {})._ || 0"></div><button @click="inc('{{ item.id }}')" class="h-8 w-8 rounded-lg bg-white text-blush-600 shadow-sm hover:bg-blush-50">+</button></div>
+              </div>
+              <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-100"><div class="h-full rounded-full bg-blush-300 transition-all" :style="`width:${Math.min(100, ((counts['{{ item.id }}'] || {})._ || 0) / {{ item.target }} * 100)}%`"></div></div>
+              {% endif %}
+            </div>
+        {% endmacro %}
+
+        <section id="wardrobe-section" class="scroll-mt-24" x-show="filter!=='SleepSetup' && filter!=='CareSetup' && filter!=='GearSetup' && filter!=='LeisureSetup' && filter!=='MomSetup'">
+          <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <div class="section-kicker">01 / Wardrobe map</div>
+              <h3 class="section-title">What belongs in the capsule?</h3>
+              <div class="mt-2 inline-flex items-baseline gap-1.5 rounded-2xl border border-blush-200 bg-blush-50 px-3.5 py-1.5 shadow-sm">
+                <span class="text-[10px] font-bold uppercase tracking-[.14em] text-blush-500">Target</span>
+                <span class="text-xl font-bold leading-none text-blush-700" x-text="wardrobeTargets"></span>
+                <span class="text-xs font-medium text-stone-500" x-text="sizeFilter==='All' ? 'pieces · across sizes' : 'pieces · size ' + sizeLabel(sizeFilter)"></span>
+              </div>
+            </div>
+            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+              <template x-for="tab in ['All','Base','Sleep','Day','Layer','Cute','Accessory','Outdoor']">
+                <button @click="filter=tab" :class="filter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
+              </template>
+            </div>
+          </div>
+
+          <div class="mb-4 flex flex-wrap items-center gap-3">
+            <span class="text-[11px] font-bold uppercase tracking-[.14em] text-blush-500">Size</span>
+            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+              <template x-for="s in ['All','50','56','62']">
+                <button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="s==='All' ? 'All sizes' : sizeLabel(s)"></button>
+              </template>
+            </div>
+            <span class="text-xs text-stone-400" x-text="sizeHint"></span>
+          </div>
+
+            <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {% for item in wardrobe %}
+            {{ item_card(item, "visibleForFilter('" ~ item.type ~ "') && inSize('" ~ item.id ~ "')") }}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="grid gap-5 lg:grid-cols-[1.15fr_.85fr]" x-show="filter!=='SleepSetup' && filter!=='CareSetup' && filter!=='GearSetup' && filter!=='LeisureSetup' && filter!=='MomSetup'">
+          <div class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+            <div class="section-kicker">02 / Outfit builder</div>
+            <div class="flex items-end justify-between gap-3"><div><h3 class="section-title">Mix & match</h3><p class="mt-1 text-sm text-stone-500">Tap a recipe to see the logic behind the wardrobe.</p></div><button @click="customOpen=!customOpen" class="rounded-xl border border-blush-200 px-3 py-2 text-xs font-medium text-blush-700 hover:bg-blush-50">Build custom</button></div>
+            <div class="mt-5 grid gap-3 sm:grid-cols-2">
+              {% for outfit in outfits %}
+              <button @click="selectedOutfit={{ loop.index0 }}" :class="selectedOutfit==={{loop.index0}} ? 'border-blush-300 bg-blush-50/60 ring-1 ring-blush-200' : 'border-stone-100 bg-white'" class="rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm">
+                <div class="flex items-center gap-3"><div class="text-2xl">{{outfit.emoji}}</div><div><div class="font-semibold">{{outfit.name}}</div><div class="text-xs text-stone-400">{{outfit.when}}</div></div></div>
+                <div class="mt-3 flex items-center justify-between">
+                  <div class="flex flex-wrap gap-1.5">{% for layer in outfit.layers %}<span class="rounded-full bg-white px-2 py-1 text-[11px] text-stone-600 shadow-sm">{{layer}}</span>{% endfor %}</div>
+                  <div class="text-xs text-stone-400 ml-3" x-text="availableForOutfit({{loop.index0}}) + ' available'"></div>
+                </div>
+              </button>
+              {% endfor %}
+            </div>
+          </div>
+
+          <div class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+            <div class="section-kicker">Selected outfit</div>
+            <div class="mt-2 text-2xl font-semibold" x-text="outfits[selectedOutfit].name"></div>
+            <p class="mt-1 text-sm text-stone-500" x-text="outfits[selectedOutfit].when"></p>
+            <div class="mt-5 space-y-2">
+              <template x-for="(layer, i) in outfits[selectedOutfit].layers" :key="layer">
+                <div class="flex items-center gap-3 rounded-xl border border-stone-100 bg-stone-50/70 px-3 py-3">
+                  <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-xs font-semibold text-blush-600" x-text="i+1"></div>
+                  <div class="flex-1"><span class="text-sm" x-text="layer"></span></div>
+                  <div class="text-xs font-medium" x-text="(getIdForLayer(layer) ? ownedTotal(getIdForLayer(layer)) + ' on hand' : 'not matched')" :class="getIdForLayer(layer) && ownedTotal(getIdForLayer(layer)) > 0 ? 'text-green-600' : 'text-rose-500'"></div>
+                </div>
+              </template>
+            </div>
+            <div class="mt-5 rounded-2xl bg-blush-50 p-4 text-xs leading-5 text-stone-600">
+              <strong class="text-stone-800">Why this works:</strong> one dependable base, then one daytime style, with accessories only when the feet/conditions need them.
+            </div>
+          </div>
+        </section>
+
+        <section id="sleep-section" class="scroll-mt-24" x-show="filter==='All' || filter==='SleepSetup'">
+          <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+            <div class="section-kicker">03 / Sleep setup</div>
+            <h3 class="section-title">The sleep corner</h3>
+            <div class="mt-2 inline-flex items-baseline gap-1.5 rounded-2xl border border-blush-200 bg-blush-50 px-3.5 py-1.5 shadow-sm">
+              <span class="text-[10px] font-bold uppercase tracking-[.14em] text-blush-500">Target</span>
+              <span class="text-xl font-bold leading-none text-blush-700" x-text="sleepTargets"></span>
+              <span class="text-xs font-medium text-stone-500">pieces</span>
+            </div>
+            <p class="mt-2 text-sm text-stone-500">What your baby wears for sleep, plus the safe-sleep setup around it.</p>
+            </div>
+            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+              <template x-for="tab in ['All','Essentials','Optional']">
+                <button @click="sleepFilter=tab" :class="sleepFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
+              </template>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {% for item in sleep %}
+            {{ item_card(item, "sleepFilter === 'All' || sleepFilter === '" ~ item.group ~ "'") }}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="care-section" class="scroll-mt-24" x-show="filter==='All' || filter==='CareSetup'">
+          <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <div class="section-kicker">04 / Diapering &amp; bath &amp; care</div>
+              <h3 class="section-title">Clean, warm, and comfy</h3>
+              <div class="mt-2 inline-flex items-baseline gap-1.5 rounded-2xl border border-blush-200 bg-blush-50 px-3.5 py-1.5 shadow-sm">
+                <span class="text-[10px] font-bold uppercase tracking-[.14em] text-blush-500">Target</span>
+                <span class="text-xl font-bold leading-none text-blush-700" x-text="careTargets"></span>
+                <span class="text-xs font-medium text-stone-500">pieces</span>
+              </div>
+              <p class="mt-2 text-sm text-stone-500">The everyday kit for changes, baths, and little health checks.</p>
+            </div>
+            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+              <template x-for="tab in ['All','Diapering','Bath','Care']">
+                <button @click="careFilter=tab" :class="careFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
+              </template>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {% for item in care %}
+            {{ item_card(item, "careFilter === 'All' || careFilter === '" ~ item.group ~ "'") }}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="gear-section" class="scroll-mt-24" x-show="filter==='All' || filter==='GearSetup'">
+          <div class="mb-4">
+            <div class="section-kicker">05 / Baby gear</div>
+            <h3 class="section-title">Getting around &amp; settling down</h3>
+            <div class="mt-2 inline-flex items-baseline gap-1.5 rounded-2xl border border-blush-200 bg-blush-50 px-3.5 py-1.5 shadow-sm">
+              <span class="text-[10px] font-bold uppercase tracking-[.14em] text-blush-500">Target</span>
+              <span class="text-xl font-bold leading-none text-blush-700" x-text="gearTargets"></span>
+              <span class="text-xs font-medium text-stone-500">pieces</span>
+            </div>
+            <p class="mt-2 text-sm text-stone-500">The big-ticket basics for transport and safe spots to put baby down.</p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {% for item in gear %}
+            {{ item_card(item) }}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="leisure-section" class="scroll-mt-24" x-show="filter==='All' || filter==='LeisureSetup'">
+          <div class="mb-4">
+            <div class="section-kicker">06 / Leisure</div>
+            <h3 class="section-title">Play &amp; cuddle</h3>
+            <div class="mt-2 inline-flex items-baseline gap-1.5 rounded-2xl border border-blush-200 bg-blush-50 px-3.5 py-1.5 shadow-sm">
+              <span class="text-[10px] font-bold uppercase tracking-[.14em] text-blush-500">Target</span>
+              <span class="text-xl font-bold leading-none text-blush-700" x-text="leisureTargets"></span>
+              <span class="text-xs font-medium text-stone-500">pieces</span>
+            </div>
+            <p class="mt-2 text-sm text-stone-500">A small starter set for awake time — tummy time, first books and things to grab.</p>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {% for item in leisure %}
+            {{ item_card(item) }}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section id="mom-section" class="scroll-mt-24" x-show="filter==='All' || filter==='MomSetup'">
+          <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+            <div>
+              <div class="section-kicker">07 / Mom</div>
+              <h3 class="section-title">For mum</h3>
+              <div class="mt-2 inline-flex items-baseline gap-1.5 rounded-2xl border border-blush-200 bg-blush-50 px-3.5 py-1.5 shadow-sm">
+                <span class="text-[10px] font-bold uppercase tracking-[.14em] text-blush-500">Target</span>
+                <span class="text-xl font-bold leading-none text-blush-700" x-text="momTargets"></span>
+                <span class="text-xs font-medium text-stone-500">pieces</span>
+              </div>
+              <p class="mt-2 text-sm text-stone-500">Nursing essentials and postpartum care for the weeks around the birth.</p>
+            </div>
+            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+              <template x-for="tab in ['All','Nursing','Health & care']">
+                <button @click="momFilter=tab" :class="momFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
+              </template>
+            </div>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {% for item in mom %}
+            {{ item_card(item, "momFilter === 'All' || momFilter === '" ~ item.group ~ "'") }}
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+          <div class="section-kicker">08 / Shopping strategy</div>
+          <h3 class="section-title">Spend where quality matters</h3>
+          <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-500">Use your higher-quality budget for the pieces that touch skin all day or get washed constantly. Pick the brands you want to hunt for — these pools feed the clothing cards. Diapering, sleep, gear and leisure cards each have their own brand suggestions.</p>
+          <div class="mt-5 grid gap-5 lg:grid-cols-2">
+            {% for tier in brand_tiers %}
+            <div class="rounded-2xl border border-stone-100 bg-stone-50/60 p-4">
+              <div class="font-semibold">{{ tier.name }}</div>
+              <p class="mt-1 text-xs leading-5 text-stone-500">{{ tier.note }}</p>
+              <div class="mt-3 flex flex-wrap gap-2">
+                <template x-for="b in tierBrands('{{ tier.id }}')" :key="b">
+                  <button @click="togglePickedBrand('{{ tier.id }}', b)" :class="isPicked('{{ tier.id }}', b) ? 'border-blush-400 bg-blush-500 text-white' : 'border-stone-200 bg-white text-stone-600 hover:border-blush-300 hover:text-blush-700'" class="rounded-full border px-3 py-1 text-xs font-medium transition" x-text="b"></button>
+                </template>
+              </div>
+              <div class="mt-3 flex gap-2">
+                <input type="text" x-model="brandDraft.{{ tier.id }}" @keydown.enter="addCustomBrand('{{ tier.id }}')" placeholder="Add your own brand…" class="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs">
+                <button @click="addCustomBrand('{{ tier.id }}')" class="rounded-lg bg-blush-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Add</button>
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </section>
+
+        <section class="grid gap-5 lg:grid-cols-2">
+          <div class="rounded-3xl border border-amber-200 bg-amber-50/70 p-6">
+            <div class="text-xs font-semibold uppercase tracking-[.16em] text-amber-700">Safety note / sleep</div>
+            <h3 class="mt-2 text-xl font-semibold">Keep sleep separate from “cute layering.”</h3>
+            <p class="mt-2 text-sm leading-6 text-stone-600">For sleep, think <strong>sleepsuit + an appropriate sleep bag</strong>, rather than adding cardigans, bulky jumpers or loose extra layers. Check the sleep-bag manufacturer's guidance for TOG and the room temperature. Remove hats indoors and in warm cars.</p>
+          </div>
+          <div class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+            <div class="text-xs font-semibold uppercase tracking-[.16em] text-blush-600">Sources</div>
+            <p class="mt-2 text-sm leading-6 text-stone-600">The layer logic and starter quantities are a planning framework, not a medical prescription. The NHS recommends about 1 extra layer in winter and notes that several light layers are preferable to one heavy layer; it also recommends keeping sleep clothing simple to avoid overheating.</p>
+            <div class="mt-3 text-xs text-stone-400">NHS: “How to dress a newborn” • NHS: “What you’ll need for your baby” • Sanetta size guide</div>
+          </div>
+        </section>
+
+        <footer class="pb-8 text-xs text-stone-400">Saved in this browser · This MVP is intentionally easy to extend into nursery, feeding, bathing, travel and Mom categories.</footer>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .nav{display:flex;width:100%;align-items:center;gap:.5rem;border-radius:.75rem;padding:.65rem .75rem;color:#6b6565;text-align:left}.nav.active{background:#fcefed;color:#985650;font-weight:600}
+    .brand-scroll{scrollbar-width:thin;scrollbar-color:#f2c4bd transparent}
+    .brand-scroll::-webkit-scrollbar{width:6px}
+    .brand-scroll::-webkit-scrollbar-thumb{background:#f2c4bd;border-radius:9999px}
+    .brand-scroll::-webkit-scrollbar-track{background:transparent}
+    .card{border:1px solid #f8ddd8;background:#fff;border-radius:1.5rem;padding:1.25rem;box-shadow:0 10px 30px rgba(66,42,42,.05)}
+    .label,.section-kicker{font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:#b58c88}.metric{margin-top:.35rem;font-size:1.7rem;font-weight:650;letter-spacing:-.02em}.muted{margin-top:.2rem;font-size:.75rem;line-height:1.35rem;color:#857d7d}.section-title{margin-top:.2rem;font-size:1.5rem;font-weight:650;letter-spacing:-.02em}
+  </style>
+
+  <script>
+    function wardrobeApp(){
+      const wardrobeData = {{ wardrobe|tojson }};
+      const sleepData = {{ sleep|tojson }};
+      const careData = {{ care|tojson }};
+      const gearData = {{ gear|tojson }};
+      const leisureData = {{ leisure|tojson }};
+      const momData = {{ mom|tojson }};
+      const allItems = wardrobeData.concat(sleepData, careData, gearData, leisureData, momData);
+      const itemsByCategory = {
+        clothing: wardrobeData,
+        sleep: sleepData,
+        care: careData,
+        gear: gearData,
+        leisure: leisureData,
+        mom: momData,
+      };
+      const categoryOf = {};
+      for (const [cat, items] of Object.entries(itemsByCategory)) {
+        for (const it of items) categoryOf[it.id] = cat;
+      }
+      // counts are per size: {itemId: {size: owned}}; sleep gear uses "_".
+      const defaults={body:{50:2},sleep:{50:2},romper:{50:1},trousers:{50:1},cardigan:{56:1},top:{56:1},knitromper:{56:1},socks:{50:3},hat:{50:1}};
+      const savedRaw=JSON.parse(localStorage.getItem('babyWardrobeCounts')||'null');
+      // Older saves were flat {itemId: owned}; move those numbers to the item's
+      // smallest size so nothing gets lost.
+      function migrate(saved){
+        const out={};
+        for(const k of Object.keys(saved||{})){
+          const v=saved[k];
+          if(v && typeof v==='object'){ out[k]=v; continue; }
+          const it=allItems.find(i=>i.id===k);
+          if(!it) continue;
+          if(it.size_targets){ out[k]={[ (it.sizes&&it.sizes[0]) || '50' ]:v}; }
+          else { out[k]={_:v}; }
+        }
+        return out;
+      }
+      const counts=savedRaw?migrate(savedRaw):defaults;
+      return {
+        filter:'All', sleepFilter:'All', careFilter:'All', momFilter:'All', sizeFilter:'All', sizeSystem:localStorage.getItem('sizeSystem')||'EU', laundryDays:Number(localStorage.getItem('laundryDays')||5), selectedOutfit:0, customOpen:false,
+        counts,
+        US_SIZES:{'50':'NB','56':'0–3M','62':'3–6M'},
+        sizeLabel(s){ return s==='All' ? 'All' : (this.sizeSystem==='US' ? (this.US_SIZES[s]||s) : s) },
+        setSizeSystem(sys){ this.sizeSystem=sys; localStorage.setItem('sizeSystem',sys) },
+        outfits: {{ outfits|tojson }},
+        wardrobe: wardrobeData,
+        sleep: sleepData,
+        care: careData,
+        gear: gearData,
+        leisure: leisureData,
+        mom: momData,
+        clothingCount(){ return (this.wardrobe || []).length },
+        sleepCount(){ return (this.sleep || []).length },
+        careCount(){ return (this.care || []).length },
+        gearCount(){ return (this.gear || []).length },
+        leisureCount(){ return (this.leisure || []).length },
+        momCount(){ return (this.mom || []).length },
+        userLinks:JSON.parse(localStorage.getItem('babyItemLinks')||'{}'),
+        linkEdit:null, linkDraft:'',
+        brandTiers: {{ brand_tiers|tojson }},
+        categoryBrands: {{ category_brands|tojson }},
+        brands: JSON.parse(localStorage.getItem('babyBrands')||'null') || {picked:{quality:['Sanetta'],value:['Little Dutch','Mayoral']}, custom:{quality:[],value:[]}, items:{}},
+        brandDraft:{quality:'', value:''},
+        tierBrands(tid){ const t=this.brandTiers.find(t=>t.id===tid); return t ? t.brands.concat(this.brands.custom[tid]||[]) : []; },
+        isPicked(tid,b){ return (this.brands.picked[tid]||[]).includes(b); },
+        togglePickedBrand(tid,b){
+          const arr=this.brands.picked[tid]||[];
+          this.brands.picked[tid] = arr.includes(b) ? arr.filter(x=>x!==b) : arr.concat(b);
+          this.saveBrands();
+        },
+        addCustomBrand(tid){
+          const v=(this.brandDraft[tid]||'').trim();
+          if(!v) return;
+          if(!(this.brands.custom[tid]||[]).includes(v)) this.brands.custom[tid]=(this.brands.custom[tid]||[]).concat(v);
+          if(!(this.brands.picked[tid]||[]).includes(v)) this.brands.picked[tid]=(this.brands.picked[tid]||[]).concat(v);
+          this.brandDraft[tid]='';
+          this.saveBrands();
+        },
+        saveBrands(){ localStorage.setItem('babyBrands', JSON.stringify(this.brands)); },
+        brandFor(id){ return this.brands.items[id] ?? ((this.itemById(id)||{}).brand ?? ''); },
+        setItemBrand(id,v){ this.brands.items={...this.brands.items, [id]:v}; this.saveBrands(); },
+        brandMenu:null, brandQuery:'',
+        openBrandMenu(id){ this.brandMenu=id; this.brandQuery=''; },
+        filteredBrandOptions(id){
+          const q=(this.brandQuery||'').trim().toLowerCase();
+          return this.brandOptionsFor(id).filter(b => !q || b.toLowerCase().includes(q));
+        },
+        chooseBrand(id,b){ this.setItemBrand(id,b); this.brandMenu=null; },
+        brandOptionsFor(id){
+          const cat = categoryOf[id] || 'clothing';
+          const pool = new Set();
+          if(cat === 'clothing'){
+            for(const t of this.brandTiers){ for(const b of this.tierBrands(t.id)) pool.add(b); }
+          } else {
+            for(const b of (this.categoryBrands[cat]||[])) pool.add(b);
+          }
+          for(const it of (itemsByCategory[cat]||[])){
+            const b = this.brands.items[it.id] ?? it.brand;
+            if(b) pool.add(b);
+          }
+          return [...pool].sort();
+        },
+        linkFor(id){ return this.userLinks[id] || (this.itemById(id)||{}).purchase_url || '' },
+        editLink(id){ this.linkEdit = this.linkEdit===id ? null : id; this.linkDraft = this.linkFor(id); },
+        saveLink(id){
+          const v=(this.linkDraft||'').trim();
+          const {[id]:_drop, ...rest}=this.userLinks;
+          this.userLinks = v ? {...rest, [id]:v} : rest;
+          localStorage.setItem('babyItemLinks', JSON.stringify(this.userLinks));
+          this.linkEdit=null;
+        },
+        clearLink(id){
+          const {[id]:_drop, ...rest}=this.userLinks;
+          this.userLinks=rest;
+          localStorage.setItem('babyItemLinks', JSON.stringify(this.userLinks));
+        },
+        itemById(id){ return allItems.find(i=>i.id===id) },
+        inSize(id){
+          if(this.sizeFilter==='All') return true;
+          const it=this.itemById(id);
+          return !!(it && it.sizes && it.sizes.includes(this.sizeFilter));
+        },
+        cardTarget(id){
+          const it=this.itemById(id);
+          if(!it) return 0;
+          if(!it.size_targets) return it.target;
+          if(this.sizeFilter==='All') return Object.values(it.size_targets).reduce((a,b)=>a+b,0);
+          return it.size_targets[this.sizeFilter] || 0;
+        },
+        countFor(id){
+          const c=this.counts[id]||{};
+          if(this.sizeFilter==='All') return Object.values(c).reduce((a,b)=>a+b,0);
+          return c[this.sizeFilter]||0;
+        },
+        ownedTotal(id){ return Object.values(this.counts[id]||{}).reduce((a,b)=>a+b,0) },
+        barPct(id){ const t=this.cardTarget(id); return t ? Math.min(100, this.countFor(id)/t*100) : 0 },
+        get sizeHint(){
+          if(this.sizeFilter==='All') return this.sizeSystem==='US'
+            ? 'US sizes are by age — NB ≈ EU 50 · 0–3M ≈ 56 · 3–6M ≈ 62.'
+            : 'EU sizes are the maximum height in cm.';
+          return {
+            '50':'≈ birth–6 weeks — buy little; babies move through it fast.',
+            '56':'≈ 1–3 months — the main working wardrobe.',
+            '62':'≈ 3–6 months — usually gets the most wear.',
+          }[this.sizeFilter] || '';
+        },
+        get sizesCardHint(){
+          return this.sizeSystem==='US'
+            ? 'US sizes are by age: NB (newborn) · 0–3M · 3–6M. Click a size to plan it.'
+            : 'EU size = max height in cm. Click a size to plan it. 50 ≈ 0–1 mo · 56 ≈ 1–3 mo · 62 ≈ 3–6 mo.';
+        },
+        inc(id){
+          const it=this.itemById(id);
+          const s=(it && it.size_targets) ? this.sizeFilter : '_';
+          if(s==='All') return;
+          const c={...(this.counts[id]||{})};
+          c[s]=(c[s]||0)+1; this.counts[id]=c; this.save();
+        },
+        dec(id){
+          const it=this.itemById(id);
+          const s=(it && it.size_targets) ? this.sizeFilter : '_';
+          if(s==='All') return;
+          const c={...(this.counts[id]||{})};
+          c[s]=Math.max(0,(c[s]||0)-1); this.counts[id]=c; this.save();
+        },
+        save(){localStorage.setItem('babyWardrobeCounts',JSON.stringify(this.counts));localStorage.setItem('laundryDays',this.laundryDays)},
+        goTo(view, sectionId){
+          this.filter = view;
+          setTimeout(() => {
+            if(sectionId){
+              const el = document.getElementById(sectionId);
+              if(el) el.scrollIntoView({behavior:'smooth', block:'start'});
+            } else {
+              window.scrollTo({top:0, behavior:'smooth'});
+            }
+          }, 60);
+        },
+        getIdForLayer(layer){
+          const name = String(layer).toLowerCase().trim();
+          for(const item of this.wardrobe.concat(this.sleep, this.care, this.gear, this.leisure, this.mom)){
+            const iname = String(item.name).toLowerCase();
+            if(iname === name) return item.id;
+            if(iname.includes(name) || name.includes(iname)) return item.id;
+          }
+          return null;
+        },
+        availableForOutfit(index){
+          const layers = this.outfits[index].layers || [];
+          const ids = layers.map(l => this.getIdForLayer(l));
+          if(ids.length === 0) return 0;
+          if(ids.some(id => id === null)) return 0;
+          return Math.min(...ids.map(id => Math.floor(this.ownedTotal(id))));
+        },
+        visibleForFilter(type){
+          if(this.filter === 'All' || this.filter === 'Clothing') return true;
+          return this.filter === type;
+        },
+        get wardrobeTargets(){
+          const sum=(it)=>Object.values(it.size_targets).reduce((a,b)=>a+b,0);
+          if(this.sizeFilter==='All') return this.wardrobe.reduce((s,i)=>s+sum(i),0);
+          return this.wardrobe.reduce((s,i)=>s+(i.size_targets[this.sizeFilter]||0),0);
+        },
+        get sleepTargets(){ return this.sleep.reduce((s,i)=>s+i.target,0) },
+        get careTargets(){ return this.care.reduce((s,i)=>s+i.target,0) },
+        get gearTargets(){ return this.gear.reduce((s,i)=>s+i.target,0) },
+        get leisureTargets(){ return this.leisure.reduce((s,i)=>s+i.target,0) },
+        get momTargets(){ return this.mom.reduce((s,i)=>s+i.target,0) },
+        get progress(){
+          let sum=0, n=0;
+          for(const it of this.wardrobe){
+            const t=this.cardTarget(it.id);
+            if(!t) continue;
+            sum+=Math.min(1,this.countFor(it.id)/t); n++;
+          }
+          return n ? Math.round(sum/n*100) : 0;
+        }
+      }
+    }
+  </script>
+</body>
+</html>
