@@ -233,6 +233,7 @@
                 <button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="s==='All' ? 'All sizes' : sizeLabel(s)"></button>
               </template>
             </div>
+            <span x-show="sizeFilter==='50'" class="text-xs text-stone-400" x-text="sizeHint"></span>
           </div>
 
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -647,6 +648,7 @@
         },
         ownedTotal(id){ return Object.values(this.counts[id]||{}).reduce((a,b)=>a+b,0) },
         barPct(id){ const t=this.cardTarget(id); return t ? Math.min(100, this.countFor(id)/t*100) : 0 },
+        get sizeHint(){ return '≈ birth to 6 weeks. Buy little, they outgrow it fast.' },
         get sizesCardHint(){
           return this.sizeSystem==='US'
             ? 'US sizes are by age: NB (newborn) · 0–3M · 3–6M. Click a size to plan it.'
