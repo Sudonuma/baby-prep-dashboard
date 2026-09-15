@@ -120,10 +120,10 @@
             <div class="max-w-2xl">
               <div class="mb-3 inline-flex rounded-full bg-blush-50 px-3 py-1 text-xs font-medium text-blush-700">{{ season_label|upper }} CAPSULE</div>
               {% if arrived %}
-              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is here 🎉</h3>
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl"><span class="text-blush-600">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %}</span> is here 🎉</h3>
               <p class="mt-4 text-lg leading-8 text-stone-500">Everything is ready — enjoy the first days together.</p>
               {% else %}
-              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is almost here {{ season_emoji }}</h3>
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl"><span class="text-blush-600">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %}</span> is almost here {{ season_emoji }}</h3>
               <p class="mt-4 text-lg leading-8 text-stone-500">Let's plan gently, one category at a time.</p>
               {% endif %}
               <div class="mt-6 flex flex-wrap gap-2 text-xs text-stone-600">
