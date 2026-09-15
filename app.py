@@ -30,7 +30,7 @@ WARDROBE = [
     {"id":"knitromper","name":"Sleeveless knitted romper / pinafore","type":"Cute","icon":"♡","brand":"Little Dutch","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":"Layer over a long-sleeve bodysuit or top."},
     {"id":"socks","name":"Socks / booties","type":"Accessory","icon":"◌","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":6,"62":6},"unit":"pairs","note":"Only needed when feet are not covered by the outfit."},
     {"id":"hat","name":"Warm hat","type":"Outdoor","icon":"❄","brand":"Sanetta / Next","sizes":["50","56","62"],"size_targets":{"50":1,"56":2,"62":1},"unit":"pieces","note":"For outdoor cold."},
-    {"id":"outer","name":"Warm outer suit / pramsuit","type":"Outdoor","icon":"❄","brand":"","sizes":["50","56","62"],"size_targets":{"50":1,"56":1,"62":1},"unit":"piece","note":"For outdoor winter use. The exact outer layer depends on temperature and transport setup."},
+    {"id":"outer","name":"Warm outer suit / pramsuit","type":"Outdoor","icon":"❄","brand":"","sizes":["50","56","62"],"size_targets":{"50":1,"56":1,"62":1},"unit":"piece","note":""},
 ]
 
 # Sleep is its own top-level category, filtered by group like clothing is
