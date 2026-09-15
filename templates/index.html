@@ -132,18 +132,18 @@
               </div>
             </div>
           </div>
-          <div class="rounded-[7rem] bg-blush-500 p-6 pb-8 pt-8 text-center text-white shadow-soft md:rounded-3xl md:p-6 md:pb-6 md:pt-6">
+          <div class="mx-auto flex aspect-square w-full max-w-[21rem] flex-col items-center justify-center rounded-full bg-blush-500 px-9 text-center text-white shadow-soft md:mx-0 md:block md:aspect-auto md:max-w-none md:rounded-3xl md:p-6">
             <div class="text-sm font-medium text-white/80">Baby now</div>
             {% if baby_now %}
-            <div class="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full bg-white/15 text-6xl">{{ baby_now.emoji }}</div>
-            <div class="mt-4 text-xl font-semibold leading-snug">{{ baby_now.title }}</div>
-            <p class="mt-2 text-sm leading-6 text-white/85">{{ baby_now.text }}</p>
-            <div class="mt-5 border-t border-white/20 pt-4 text-xs text-white/80">{{ baby_now.footer }}</div>
+            <div class="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-full bg-white/15 text-6xl md:mt-4 md:h-32 md:w-32">{{ baby_now.emoji }}</div>
+            <div class="mt-3 text-xl font-semibold leading-snug md:mt-4">{{ baby_now.title }}</div>
+            <p class="mt-1 text-sm leading-6 text-white/85 md:mt-2">{{ baby_now.text }}</p>
+            <div class="mt-4 text-xs text-white/80 md:mt-5 md:border-t md:border-white/20 md:pt-4">{{ baby_now.footer }}</div>
             {% else %}
-            <div class="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full bg-white/15 text-6xl">🌸</div>
-            <div class="mt-4 text-xl font-semibold leading-snug">Your little one is on the way</div>
-            <p class="mt-2 text-sm leading-6 text-white/85">Set a due date in Baby details to see how big they are right now.</p>
-            <div class="mt-5 border-t border-white/20 pt-4 text-xs"><a href="/settings" class="text-white/90 underline decoration-white/40 underline-offset-2 hover:decoration-white">Add due date →</a></div>
+            <div class="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-full bg-white/15 text-6xl md:mt-4 md:h-32 md:w-32">🌸</div>
+            <div class="mt-3 text-xl font-semibold leading-snug md:mt-4">Your little one is on the way</div>
+            <p class="mt-1 text-sm leading-6 text-white/85 md:mt-2">Set a due date in Baby details to see how big they are right now.</p>
+            <div class="mt-4 text-xs md:mt-5 md:border-t md:border-white/20 md:pt-4"><a href="/settings" class="text-white/90 underline decoration-white/40 underline-offset-2 hover:decoration-white">Add due date →</a></div>
             {% endif %}
           </div>
         </section>
