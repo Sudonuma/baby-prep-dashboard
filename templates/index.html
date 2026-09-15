@@ -135,12 +135,12 @@
           <div class="rounded-3xl bg-blush-500 p-6 text-white shadow-soft">
             <div class="text-sm font-medium text-white/80">Baby now</div>
             {% if baby_now %}
-            <div class="mt-4 flex items-center justify-center rounded-2xl bg-white/15 py-8 text-6xl">{{ baby_now.emoji }}</div>
+            <div class="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full bg-white/15 text-6xl">{{ baby_now.emoji }}</div>
             <div class="mt-4 text-xl font-semibold leading-snug">{{ baby_now.title }}</div>
             <p class="mt-2 text-sm leading-6 text-white/85">{{ baby_now.text }}</p>
             <div class="mt-5 border-t border-white/20 pt-4 text-xs text-white/80">{{ baby_now.footer }}</div>
             {% else %}
-            <div class="mt-4 flex items-center justify-center rounded-2xl bg-white/15 py-8 text-6xl">🌸</div>
+            <div class="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full bg-white/15 text-6xl">🌸</div>
             <div class="mt-4 text-xl font-semibold leading-snug">Your little one is on the way</div>
             <p class="mt-2 text-sm leading-6 text-white/85">Set a due date in Baby details to see how big they are right now.</p>
             <div class="mt-5 border-t border-white/20 pt-4 text-xs"><a href="/settings" class="text-white/90 underline decoration-white/40 underline-offset-2 hover:decoration-white">Add due date →</a></div>
