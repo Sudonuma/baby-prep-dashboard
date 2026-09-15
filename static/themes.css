@@ -2,6 +2,13 @@
    The shades follow the same lightness/saturation curve, so any palette can
    drop in everywhere the blush scale is used. Add a new theme by adding a
    [data-theme="..."] block. */
+
+/* Phone view: slightly smaller root font so content fits the screen.
+   All rem-based sizes and spacing scale down together. */
+@media (max-width: 767px) {
+  html { font-size: 14px; }
+}
+
 :root,
 [data-theme="peach"] {
   --b50: 255 248 247; --b100: 252 239 237; --b200: 248 221 216; --b300: 242 196 189;
