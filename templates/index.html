@@ -180,10 +180,18 @@
                 <button @click="saveLink('{{ item.id }}')" class="rounded-lg bg-blush-500 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Save</button>
               </div>
               {% if item.preferred_colors %}
-              <div class="mt-2 flex flex-wrap gap-2">
-                {% for c in item.preferred_colors %}
-                <span class="text-[11px] rounded-full border px-2 py-0.5 bg-stone-50 text-stone-600">{{ c }}</span>
-                {% endfor %}
+              <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                <template x-for="c in colorsFor('{{ item.id }}')" :key="c">
+                  <span class="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600">
+                    <span x-text="c"></span>
+                    <button @click="removeColor('{{ item.id }}', c)" class="text-stone-300 transition hover:text-rose-500">✕</button>
+                  </span>
+                </template>
+                <button x-show="colorEdit!=='{{ item.id }}'" @click="toggleColorInput('{{ item.id }}')" class="rounded-full border border-dashed border-stone-300 px-2 py-0.5 text-[11px] text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ color</button>
+                <span x-show="colorEdit==='{{ item.id }}'" class="inline-flex items-center gap-1">
+                  <input type="text" x-model="colorDraft" @keydown.enter="addColor('{{ item.id }}')" placeholder="color…" class="w-24 rounded-full border border-blush-200 px-2 py-0.5 text-[11px] outline-none">
+                  <button @click="addColor('{{ item.id }}')" class="text-[11px] font-medium text-blush-600">add</button>
+                </span>
               </div>
               {% endif %}
               <p class="mt-2 min-h-10 text-xs leading-5 text-stone-500">{{ item.note }}</p>
@@ -533,6 +541,7 @@
               if(s.counts) this.counts=s.counts;
               if(s.links) this.userLinks=s.links;
               if(s.brands) this.brands=s.brands;
+              if(s.colors) this.colors=s.colors;
               if(s.sizeSystem) this.sizeSystem=s.sizeSystem;
               if(s.theme && s.theme!==document.documentElement.dataset.theme){
                 document.documentElement.dataset.theme=s.theme;
@@ -553,6 +562,7 @@
                 counts:this.counts,
                 links:this.userLinks,
                 brands:this.brands,
+                colors:this.colors,
                 sizeSystem:this.sizeSystem,
                 theme: document.documentElement.dataset.theme || 'peach',
               }),
@@ -571,6 +581,8 @@
         mom: momData,
         userLinks:{},
         linkEdit:null, linkDraft:'',
+        colors:{},
+        colorEdit:null, colorDraft:'',
         brandTiers: {{ brand_tiers|tojson }},
         categoryBrands: {{ category_brands|tojson }},
         brands: {picked:{quality:[],value:[]}, custom:{quality:[],value:[]}, items:{}},
@@ -629,6 +641,20 @@
           this.save();
         },
         itemById(id){ return allItems.find(i=>i.id===id) },
+        colorsFor(id){ return this.colors[id] ?? ((this.itemById(id)||{}).preferred_colors ?? []) },
+        toggleColorInput(id){ this.colorEdit = this.colorEdit===id ? null : id; this.colorDraft=''; },
+        addColor(id){
+          const v=(this.colorDraft||'').trim();
+          if(v && !this.colorsFor(id).includes(v)){
+            this.colors={...this.colors, [id]:this.colorsFor(id).concat(v)};
+            this.save();
+          }
+          this.colorDraft=''; this.colorEdit=null;
+        },
+        removeColor(id,c){
+          this.colors={...this.colors, [id]:this.colorsFor(id).filter(x=>x!==c)};
+          this.save();
+        },
         inSize(id){
           if(this.sizeFilter==='All') return true;
           const it=this.itemById(id);
