@@ -21,14 +21,14 @@ init_db()
 # months, 62 ≈ 3–6 months). Defaults follow the usual guidance: keep size 50
 # small because the stage is short, carry the working wardrobe in 56/62.
 WARDROBE = [
-    {"id":"body","name":"Long-sleeve bodysuit","type":"Base","icon":"▱","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":4,"56":6,"62":6},"unit":"pieces","note":"Your everyday base layer. Keep several in easy-wash cotton.","preferred_colors":["white","beige","soft peachy pink"]},
-    {"id":"sleep","name":"Footed sleepsuit / all-in-one","type":"Sleep","icon":"☾","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":5,"62":5},"unit":"pieces","note":"Useful for nights and simple daytime outfits. Footed versions reduce the need for socks."},
-    {"id":"romper","name":"Romper","type":"Day","icon":"✿","brand":"Little Dutch","sizes":["50","56","62"],"size_targets":{"50":1,"56":3,"62":3},"unit":"pieces","note":"A cute one-piece daytime option; add socks/booties if legs are uncovered."},
+    {"id":"body","name":"Long-sleeve bodysuit","type":"Base","icon":"▱","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":4,"56":6,"62":6},"unit":"pieces","note":"","preferred_colors":["white","beige","soft peachy pink"]},
+    {"id":"sleep","name":"Footed sleepsuit / all-in-one","type":"Sleep","icon":"☾","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":5,"62":5},"unit":"pieces","note":""},
+    {"id":"romper","name":"Romper","type":"Day","icon":"✿","brand":"Little Dutch","sizes":["50","56","62"],"size_targets":{"50":1,"56":3,"62":3},"unit":"pieces","note":""},
     {"id":"trousers","name":"Trousers / leggings","type":"Day","icon":"✿","brand":"Mayoral","sizes":["50","56","62"],"size_targets":{"50":1,"56":3,"62":3},"unit":"pieces","note":"Pair with a long-sleeve bodysuit."},
     {"id":"cardigan","name":"Soft cardigan","type":"Layer","icon":"⌁","brand":"Little Dutch / Mayoral","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":""},
-    {"id":"top","name":"Long-sleeve top","type":"Day","icon":"✿","brand":"Mayoral / Next","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":"Use over a bodysuit when you want a more dressed look."},
+    {"id":"top","name":"Long-sleeve top","type":"Day","icon":"✿","brand":"Mayoral / Next","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":""},
     {"id":"knitromper","name":"Sleeveless knitted romper / pinafore","type":"Cute","icon":"♡","brand":"Little Dutch","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":"Layer over a long-sleeve bodysuit or top."},
-    {"id":"socks","name":"Socks / booties","type":"Accessory","icon":"◌","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":6,"62":6},"unit":"pairs","note":"Only needed when feet are not covered by the outfit."},
+    {"id":"socks","name":"Socks / booties","type":"Accessory","icon":"◌","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":6,"62":6},"unit":"pairs","note":""},
     {"id":"hat","name":"Warm hat","type":"Outdoor","icon":"❄","brand":"Sanetta / Next","sizes":["50","56","62"],"size_targets":{"50":1,"56":2,"62":1},"unit":"pieces","note":"For outdoor cold."},
     {"id":"outer","name":"Warm outer suit / pramsuit","type":"Outdoor","icon":"❄","brand":"","sizes":["50","56","62"],"size_targets":{"50":1,"56":1,"62":1},"unit":"piece","note":""},
 ]
@@ -38,11 +38,11 @@ WARDROBE = [
 # localStorage keep working.
 SLEEP = [
     {"id":"swaddle","name":"Swaddle","type":"Essential","icon":"☾","brand":"MomCozy","sizes":["50–62"],"target":2,"unit":"pieces","note":"Light breathable swaddle or sleepsack for safe sleep.","purchase_url":"https://de.momcozy.com/products/breathable-newborn-swaddle-for-cooler-comfier-sleep-copy-1?variant=49916095267056","group":"Essentials"},
-    {"id":"sleevesack","name":"Sleeveless sleepsack","type":"Essential","icon":"☾","brand":"","sizes":["50–62"],"target":1,"unit":"piece","note":"Sleeveless sleepsack for safe, layered sleep. Consider one to alternate with swaddles.","group":"Essentials"},
+    {"id":"sleevesack","name":"Sleeveless sleepsack","type":"Essential","icon":"☾","brand":"","sizes":["50–62"],"target":1,"unit":"piece","note":"","group":"Essentials"},
     {"id":"crib","name":"Crib","type":"Essential","icon":"🛏️","brand":"","target":1,"unit":"piece","note":"The main safe sleep space; a full-size crib lasts into toddlerhood.","group":"Essentials"},
     {"id":"bassinet","name":"Bassinet or bedside sleeper","type":"Essential","icon":"🛌","brand":"","target":1,"unit":"piece","note":"Keeps baby within arm's reach for night feeds in the first months.","group":"Essentials"},
     {"id":"cribmattress","name":"Crib mattress","type":"Essential","icon":"📏","brand":"","target":1,"unit":"piece","note":"Firm, flat and snug-fitting, with no gap to the crib frame.","group":"Essentials"},
-    {"id":"cribsheets","name":"Crib sheets","type":"Essential","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"Keep a spare so a wet sheet never leaves the crib uncovered.","group":"Essentials"},
+    {"id":"cribsheets","name":"Crib sheets","type":"Essential","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"","group":"Essentials"},
     {"id":"monitor","name":"Baby monitor","type":"Optional","icon":"📡","brand":"","target":1,"unit":"piece","note":"Peace of mind once baby sleeps in a separate room.","group":"Optional"},
     {"id":"whitenoise","name":"White noise machine","type":"Optional","icon":"🔊","brand":"","target":1,"unit":"piece","note":"Helps some babies settle; keep the volume low and place it away from the crib.","group":"Optional"},
 ]
@@ -59,7 +59,7 @@ LEISURE = [
 # (targets are editable planning defaults; "packs" items assume you restock).
 CARE = [
     {"id":"changepad","name":"Changing pad","type":"Diapering","icon":"🧷","brand":"","target":1,"unit":"piece","note":"A washable mat for changes at home and on the go.","group":"Diapering"},
-    {"id":"padcovers","name":"Changing pad covers","type":"Diapering","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"Keep a spare so a wet cover never stops a change.","group":"Diapering"},
+    {"id":"padcovers","name":"Changing pad covers","type":"Diapering","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"","group":"Diapering"},
     {"id":"changingtable","name":"Changing table","type":"Diapering","icon":"🪑","brand":"","target":1,"unit":"piece","note":"A comfortable-height changing spot; always keep one hand on the baby.","group":"Diapering"},
     {"id":"cream","name":"Cream / ointment","type":"Diapering","icon":"🧴","brand":"","target":1,"unit":"piece","note":"Barrier cream for sore bottoms; a little goes a long way.","group":"Diapering"},
     {"id":"diapers","name":"Diapers","type":"Diapering","icon":"🧻","brand":"","target":2,"unit":"packs","note":"Newborns use 8–10 diapers a day. Start with two newborn-size packs and buy more once the fit is confirmed.","group":"Diapering"},
@@ -77,15 +77,15 @@ CARE = [
     {"id":"firstaid","name":"First aid kit","type":"Care","icon":"🩹","brand":"","target":1,"unit":"piece","note":"Basics for small emergencies; keep the pediatrician's number with it.","group":"Care"},
     {"id":"nasalaspirator","name":"Nasal aspirator","type":"Care","icon":"👃","brand":"","target":1,"unit":"piece","note":"Clears a blocked nose before feeds and sleep.","group":"Care"},
     {"id":"pacifiers","name":"Pacifiers","type":"Care","icon":"😙","brand":"","target":2,"unit":"pieces","note":"Babies are picky about shapes; try one or two and keep a spare.","group":"Care"},
-    {"id":"teethers","name":"Teethers","type":"Care","icon":"🦷","brand":"","target":2,"unit":"pieces","note":"Chillable teethers for gum comfort; useful from a few months.","group":"Care"},
-    {"id":"brushcomb","name":"Brush & comb","type":"Care","icon":"💈","brand":"","target":1,"unit":"piece","note":"Soft-bristle brush for the first hair and cradle-cap care.","group":"Care"},
+    {"id":"teethers","name":"Teethers","type":"Care","icon":"🦷","brand":"","target":2,"unit":"pieces","note":"","group":"Care"},
+    {"id":"brushcomb","name":"Brush & comb","type":"Care","icon":"💈","brand":"","target":1,"unit":"piece","note":"","group":"Care"},
 ]
 
 # Big-ticket gear for transport and safe places to put baby down.
 GEAR = [
     {"id":"stroller","name":"Stroller","type":"Gear","icon":"🚼","brand":"","target":1,"unit":"piece","note":"The daily workhorse. Check it fits your car boot and hallway; a lie-flat or bassinet option is best for newborns."},
     {"id":"carseat","name":"Infant car seat","type":"Gear","icon":"💺","brand":"","target":1,"unit":"piece","note":"Needed from the first ride home. i-Size (R129) is the current EU standard; a stay-in car base makes loading easier."},
-    {"id":"carrier","name":"Structured carrier or wrap carrier","type":"Gear","icon":"🎒","brand":"","target":1,"unit":"piece","note":"Hands-free closeness; newborn-friendly wraps or carriers with infant inserts work from day one."},
+    {"id":"carrier","name":"Structured carrier or wrap carrier","type":"Gear","icon":"🎒","brand":"","target":1,"unit":"piece","note":""},
     {"id":"bouncer","name":"Bouncer","type":"Gear","icon":"🪑","brand":"","target":1,"unit":"piece","note":"A safe spot to put baby down awake; the gentle bounce soothes many newborns."},
     {"id":"playard","name":"Playard / travel crib","type":"Gear","icon":"🧳","brand":"","target":1,"unit":"piece","note":"A portable sleep and play spot for travel and grandparents' houses."},
     {"id":"swing","name":"Swing","type":"Gear","icon":"🛝","brand":"","target":1,"unit":"piece","note":"Powered soothing for fussy phases; a nice-to-have — try one before buying if you can."},
@@ -119,15 +119,15 @@ CATEGORY_BRANDS = {
 
 # Mum's own kit: nursing essentials and postpartum care.
 MOM = [
-    {"id":"nursingpads","name":"Nursing pads","type":"Nursing","icon":"☁️","brand":"","target":2,"unit":"packs","note":"Leak protection between feeds; disposables for the first weeks, washable for later.","group":"Nursing"},
+    {"id":"nursingpads","name":"Nursing pads","type":"Nursing","icon":"☁️","brand":"","target":2,"unit":"packs","note":"","group":"Nursing"},
     {"id":"silvercups","name":"Silver cups","type":"Nursing","icon":"🥈","brand":"","target":1,"unit":"pair","note":"Silver nursing cups protect and soothe sore nipples between feeds — no cream needed while wearing them.","group":"Nursing"},
     {"id":"milkpumps","name":"Milk pumps","type":"Nursing","icon":"🍼","brand":"","target":1,"unit":"piece","note":"Electric for regular pumping, small manual for occasional. German statutory insurance usually covers one with a prescription.","group":"Nursing"},
     {"id":"nursingbras","name":"Nursing bras","type":"Nursing","icon":"🎀","brand":"","target":3,"unit":"pieces","note":"Buy from ~week 34 when size has settled; stretchy, front-opening, one in the wash at all times.","group":"Nursing"},
     {"id":"nursingpillow","name":"Nursing pillow","type":"Nursing","icon":"🤱","brand":"","target":1,"unit":"piece","note":"Supports feeding positions — and doubles as a tummy-time support later.","group":"Nursing"},
     {"id":"nipplecream","name":"Nipple creams","type":"Nursing","icon":"🧴","brand":"","target":1,"unit":"piece","note":"Pure lanolin is safe for baby; a little goes a long way.","group":"Nursing"},
 
-    {"id":"maternitypads","name":"Maternity pads","type":"Health & care","icon":"🩸","brand":"","target":3,"unit":"packs","note":"The thick kind for the first days and weeks postpartum.","group":"Health & care"},
-    {"id":"maternityunderwear","name":"Maternity underwear","type":"Health & care","icon":"🩲","brand":"","target":4,"unit":"pieces","note":"High-waisted, soft-waist briefs that hold pads securely and sit comfortably.","group":"Health & care"},
+    {"id":"maternitypads","name":"Maternity pads","type":"Health & care","icon":"🩸","brand":"","target":3,"unit":"packs","note":"","group":"Health & care"},
+    {"id":"maternityunderwear","name":"Maternity underwear","type":"Health & care","icon":"🩲","brand":"","target":4,"unit":"pieces","note":"","group":"Health & care"},
     {"id":"pyjamas","name":"Comfortable pyjamas","type":"Health & care","icon":"😴","brand":"","target":2,"unit":"pieces","note":"Button-front tops make nursing easier; darker or patterned fabrics hide leaks.","group":"Health & care"},
 ]
 
