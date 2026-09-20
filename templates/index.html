@@ -150,7 +150,7 @@
 
         <section class="grid gap-4 md:grid-cols-2">
           <div class="card"><div class="label">Starter targets</div><div class="mt-1 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3"><div><div class="metric" x-text="wardrobeTargets"></div><div class="muted" x-text="sizeFilter==='All' ? 'clothing pieces · across sizes' : 'clothing pieces · size ' + sizeLabel(sizeFilter)"></div></div><div><div class="metric" x-text="sleepTargets"></div><div class="muted">sleep pieces</div></div><div><div class="metric" x-text="careTargets"></div><div class="muted">care pieces</div></div><div><div class="metric" x-text="gearTargets"></div><div class="muted">gear pieces</div></div><div><div class="metric" x-text="leisureTargets"></div><div class="muted">leisure pieces</div></div><div><div class="metric" x-text="momTargets"></div><div class="muted">mom pieces</div></div></div></div>
-          <div class="card"><div class="label">Sizes</div><div class="mt-2 flex flex-wrap items-center gap-2"><div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm"><template x-for="s in ['All','50','56','62']"><button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="sizeLabel(s)"></button></template></div><div class="flex rounded-xl border border-stone-200 bg-white p-1 text-xs shadow-sm"><template x-for="sys in ['EU','US']"><button @click="setSizeSystem(sys)" :class="sizeSystem===sys ? 'bg-stone-700 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-2 py-1 transition" x-text="sys"></button></template></div></div><div class="muted" x-text="sizesCardHint"></div></div>
+          <div class="card"><div class="label">Sizes</div><div class="mt-2 flex flex-wrap items-center gap-2"><div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap"><template x-for="s in ['All','50','56','62']"><button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="sizeLabel(s)"></button></template></div><div class="flex rounded-xl border border-stone-200 bg-white p-1 text-xs shadow-sm"><template x-for="sys in ['EU','US']"><button @click="setSizeSystem(sys)" :class="sizeSystem===sys ? 'bg-stone-700 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-2 py-1 transition" x-text="sys"></button></template></div></div><div class="muted" x-text="sizesCardHint"></div></div>
         </section>
 
         {% macro item_card(item, visible='') %}
@@ -219,7 +219,7 @@
                 <span class="text-xs font-medium text-stone-500" x-text="sizeFilter==='All' ? 'pieces · across sizes' : 'pieces · size ' + sizeLabel(sizeFilter)"></span>
               </div>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Base','Sleep','Day','Layer','Cute','Accessory','Outdoor']">
                 <button @click="filter=tab" :class="filter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -228,7 +228,7 @@
 
           <div class="mb-4 flex flex-wrap items-center gap-3">
             <span class="text-[11px] font-bold uppercase tracking-[.14em] text-blush-500">Size</span>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="s in ['All','50','56','62']">
                 <button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="s==='All' ? 'All sizes' : sizeLabel(s)"></button>
               </template>
@@ -291,7 +291,7 @@
             </div>
             <p class="mt-2 text-sm text-stone-500">What your baby wears for sleep, plus the safe-sleep setup around it.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Essentials','Optional']">
                 <button @click="sleepFilter=tab" :class="sleepFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -316,7 +316,7 @@
               </div>
               <p class="mt-2 text-sm text-stone-500">The everyday kit for changes, baths, and little health checks.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Diapering','Bath','Care']">
                 <button @click="careFilter=tab" :class="careFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -377,7 +377,7 @@
               </div>
               <p class="mt-2 text-sm text-stone-500">Nursing essentials and postpartum care for the weeks around the birth.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Nursing','Health & care']">
                 <button @click="momFilter=tab" :class="momFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -397,7 +397,7 @@
               <h3 class="section-title">Little things that help</h3>
               <p class="mt-2 text-sm text-stone-500">Short, practical wisdom — collected from experienced parents and official guidance.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Clothing','Sleep']">
                 <button @click="tipsFilter=tab" :class="tipsFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
