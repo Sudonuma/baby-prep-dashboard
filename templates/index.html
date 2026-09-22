@@ -160,13 +160,24 @@
                 <span class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500">{{ item.type }}</span>
               </div>
               <div class="mt-4 font-semibold">{{ item.name }}</div>
-              <div class="relative mt-1">
-                <input type="text" :value="brandFor('{{ item.id }}')" @focus="openBrandMenu('{{ item.id }}')" @click="openBrandMenu('{{ item.id }}')" @input="brandQuery=$event.target.value; brandMenu='{{ item.id }}'" @change="setItemBrand('{{ item.id }}', $event.target.value); brandMenu=null" @blur="brandMenu=null" @keydown.escape="brandMenu=null" placeholder="Brand" class="w-full rounded-lg border border-transparent bg-blush-50/60 px-2 py-1 text-xs text-blush-700 outline-none transition placeholder:text-stone-300 focus:border-blush-300 focus:bg-white">
-                <div x-show="brandMenu==='{{ item.id }}'" x-transition.opacity.duration.100ms class="brand-scroll absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-blush-200 bg-white py-1 shadow-lg shadow-blush-700/10">
-                  <template x-for="b in filteredBrandOptions('{{ item.id }}')" :key="b">
-                    <button type="button" @mousedown.prevent="chooseBrand('{{ item.id }}', b)" class="block w-full px-3 py-1.5 text-left text-xs text-stone-600 transition hover:bg-blush-50 hover:pl-3.5 hover:text-blush-700" x-text="b"></button>
+              <div class="mt-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <template x-for="b in brandsFor('{{ item.id }}')" :key="b">
+                    <span class="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600">
+                      <span x-text="b"></span>
+                      <button @click="removeBrand('{{ item.id }}', b)" class="text-stone-300 transition hover:text-rose-500">✕</button>
+                    </span>
                   </template>
-                  <div x-show="filteredBrandOptions('{{ item.id }}').length===0" class="px-3 py-2 text-xs italic text-stone-400">Nothing matched — your own brand is kept as typed</div>
+                  <button x-show="brandEdit!=='{{ item.id }}'" @click="openBrandEdit('{{ item.id }}')" class="rounded-full border border-dashed border-stone-300 px-2 py-0.5 text-[11px] text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ brand</button>
+                </div>
+                <div x-show="brandEdit==='{{ item.id }}'" class="relative mt-1">
+                  <input type="text" x-model="brandQuery" @focus="brandMenu='{{ item.id }}'" @input="brandMenu='{{ item.id }}'" @keydown.enter.prevent="commitBrandInput('{{ item.id }}')" @blur="brandEdit=null; brandMenu=null" @keydown.escape="brandEdit=null; brandMenu=null" placeholder="Type or pick a brand" class="w-full rounded-lg border border-blush-200 bg-white px-2 py-1 text-xs text-blush-700 outline-none transition focus:border-blush-300">
+                  <div x-show="brandMenu==='{{ item.id }}'" x-transition.opacity.duration.100ms class="brand-scroll absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-blush-200 bg-white py-1 shadow-lg shadow-blush-700/10">
+                    <template x-for="b in filteredBrandOptions('{{ item.id }}')" :key="b">
+                      <button type="button" @mousedown.prevent="chooseBrand('{{ item.id }}', b)" class="block w-full px-3 py-1.5 text-left text-xs text-stone-600 transition hover:bg-blush-50 hover:pl-3.5 hover:text-blush-700" x-text="b"></button>
+                    </template>
+                    <div x-show="filteredBrandOptions('{{ item.id }}').length===0" class="px-3 py-2 text-xs italic text-stone-400">No match — press Enter to keep what you typed</div>
+                  </div>
                 </div>
               </div>
               <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
@@ -497,6 +508,14 @@
       for (const [cat, items] of Object.entries(itemsByCategory)) {
         for (const it of items) categoryOf[it.id] = cat;
       }
+      // Older state stored one brand string per item; multi-brand chips use arrays.
+      function normalizeBrands(b){
+        const items = {};
+        for(const [k,v] of Object.entries((b&&b.items)||{})){
+          items[k] = Array.isArray(v) ? v : (v ? [v] : []);
+        }
+        return {...b, items};
+      }
       // counts are per size: {itemId: {size: owned}}; sleep gear uses "_".
       // New accounts start with everything at zero — owned items are added
       // per account on the server.
@@ -530,7 +549,10 @@
               const links=JSON.parse(localStorage.getItem('babyItemLinks')||'null');
               if(links){ this.userLinks=links; s.links=links; }
               const brands=JSON.parse(localStorage.getItem('babyBrands')||'null');
-              if(brands){ this.brands=brands; s.brands=brands; }
+              if(brands){
+                this.brands=normalizeBrands(brands);
+                s.brands=this.brands;
+              }
               const sys=localStorage.getItem('sizeSystem');
               if(sys){ this.sizeSystem=sys; s.sizeSystem=sys; }
               const th=localStorage.getItem('babyTheme');
@@ -540,7 +562,7 @@
             } else {
               if(s.counts) this.counts=s.counts;
               if(s.links) this.userLinks=s.links;
-              if(s.brands) this.brands=s.brands;
+              if(s.brands) this.brands=normalizeBrands(s.brands);
               if(s.colors) this.colors=s.colors;
               if(s.sizeSystem) this.sizeSystem=s.sizeSystem;
               if(s.theme && s.theme!==document.documentElement.dataset.theme){
@@ -603,15 +625,41 @@
           this.saveBrands();
         },
         saveBrands(){ this.save() },
-        brandFor(id){ return this.brands.items[id] ?? ((this.itemById(id)||{}).brand ?? ''); },
-        setItemBrand(id,v){ this.brands.items={...this.brands.items, [id]:v}; this.saveBrands(); },
-        brandMenu:null, brandQuery:'',
-        openBrandMenu(id){ this.brandMenu=id; this.brandQuery=''; },
+        brandsFor(id){
+          const v=this.brands.items[id];
+          if(Array.isArray(v)) return v;
+          if(typeof v==='string' && v) return [v];
+          const d=(this.itemById(id)||{}).brand;
+          return d ? [d] : [];
+        },
+        addBrand(id,b){
+          if(b && !this.brandsFor(id).includes(b)){
+            this.brands.items={...this.brands.items, [id]:this.brandsFor(id).concat(b)};
+            this.save();
+          }
+        },
+        removeBrand(id,b){
+          this.brands.items={...this.brands.items, [id]:this.brandsFor(id).filter(x=>x!==b)};
+          this.save();
+        },
+        brandMenu:null, brandQuery:'', brandEdit:null,
+        openBrandEdit(id){ this.brandEdit=id; this.brandQuery=''; this.brandMenu=id; },
         filteredBrandOptions(id){
           const q=(this.brandQuery||'').trim().toLowerCase();
           return this.brandOptionsFor(id).filter(b => !q || b.toLowerCase().includes(q));
         },
-        chooseBrand(id,b){ this.setItemBrand(id,b); this.brandMenu=null; },
+        chooseBrand(id,b){
+          this.addBrand(id,b);
+          this.brandEdit=null; this.brandMenu=null; this.brandQuery='';
+        },
+        commitBrandInput(id){
+          const v=(this.brandQuery||'').trim();
+          if(v){
+            const match=this.brandOptionsFor(id).find(o=>o.toLowerCase()===v.toLowerCase());
+            this.addBrand(id, match||v);
+          }
+          this.brandEdit=null; this.brandMenu=null; this.brandQuery='';
+        },
         brandOptionsFor(id){
           const cat = categoryOf[id] || 'clothing';
           const pool = new Set();
@@ -621,8 +669,7 @@
             for(const b of (this.categoryBrands[cat]||[])) pool.add(b);
           }
           for(const it of (itemsByCategory[cat]||[])){
-            const b = this.brands.items[it.id] ?? it.brand;
-            if(b) pool.add(b);
+            for(const b of this.brandsFor(it.id)) pool.add(b);
           }
           return [...pool].sort();
         },
