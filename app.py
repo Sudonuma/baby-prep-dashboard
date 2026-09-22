@@ -1,5 +1,7 @@
 import datetime as dt
+import hashlib
 import json
+import secrets
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -7,8 +9,11 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 import auth
-from database import (create_user, get_db, get_profile, get_state, get_user_by_name,
-                      init_db, save_profile, save_state)
+import mailer
+from database import (add_password_reset, consume_password_reset, create_user, get_db,
+                      get_password_reset, get_profile, get_state, get_user_by_email,
+                      get_user_by_name, init_db, save_profile, save_state,
+                      set_email, set_password_hash, destroy_user_sessions)
 
 app = FastAPI(title="Baby Prep Dashboard")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -301,10 +306,10 @@ async def set_theme(request: Request):
 
 
 @app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, error: str = ""):
+async def login_page(request: Request, error: str = "", reset: str = ""):
     if auth.current_user(request):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request, "login.html", {"error": error})
+    return templates.TemplateResponse(request, "login.html", {"error": error, "reset": reset})
 
 
 @app.post("/login")
@@ -328,10 +333,16 @@ async def register_page(request: Request, error: str = ""):
     return templates.TemplateResponse(request, "register.html", {"error": error})
 
 
+def _valid_email(email: str) -> bool:
+    return "@" in email and "." in email.split("@")[-1] and " " not in email
+
+
 @app.post("/register")
 async def register(request: Request, username: str = Form(...),
-                   password: str = Form(...), password2: str = Form(...)):
+                   password: str = Form(...), password2: str = Form(...),
+                   email: str = Form("")):
     username = username.strip()
+    email = email.strip().lower()
     if len(username) < 3:
         return templates.TemplateResponse(request, "register.html",
             {"error": "Username needs at least 3 characters."}, status_code=400)
@@ -341,11 +352,17 @@ async def register(request: Request, username: str = Form(...),
     if password != password2:
         return templates.TemplateResponse(request, "register.html",
             {"error": "The two passwords don't match."}, status_code=400)
+    if email and not _valid_email(email):
+        return templates.TemplateResponse(request, "register.html",
+            {"error": "That email address doesn't look valid."}, status_code=400)
     with get_db() as db:
         if get_user_by_name(db, username):
             return templates.TemplateResponse(request, "register.html",
                 {"error": "That username is already taken."}, status_code=400)
-        user_id = create_user(db, username, auth.hash_password(password))
+        if email and get_user_by_email(db, email):
+            return templates.TemplateResponse(request, "register.html",
+                {"error": "That email is already connected to another account."}, status_code=400)
+        user_id = create_user(db, username, auth.hash_password(password), email)
         token = auth.create_session(db, user_id)
     response = RedirectResponse("/settings?welcome=1", status_code=303)
     response.set_cookie(auth.SESSION_COOKIE, token, httponly=True, samesite="lax")
@@ -371,32 +388,117 @@ async def settings_page(request: Request, welcome: str = "", error: str = ""):
     with get_db() as db:
         profile = get_profile(db, user["id"])
         theme = get_state(db, user["id"]).get("theme") or "peach"
+        email = (get_user_by_name(db, user["username"]) or {"email": None})["email"]
     return templates.TemplateResponse(request, "settings.html", {
         **profile, "username": user["username"], "welcome": welcome,
-        "error": error, "theme": theme})
+        "error": error, "theme": theme, "email": email})
 
 
 @app.post("/settings")
-async def settings_save(request: Request, baby_name: str = Form(""), due_date: str = Form("")):
+async def settings_save(request: Request, baby_name: str = Form(""), due_date: str = Form(""),
+                        email: str = Form("")):
     user = auth.current_user(request)
     if not user:
         return RedirectResponse("/login", status_code=303)
     baby_name = baby_name.strip()[:40]
+    email = email.strip().lower()
+    if email and not _valid_email(email):
+        return templates.TemplateResponse(request, "settings.html", {
+            **get_profile_safe(user), "username": user["username"],
+            "welcome": "", "error": "That email address doesn't look valid.",
+            "theme": "peach", "email": email}, status_code=400)
     if due_date:
         try:
             dt.date.fromisoformat(due_date)
         except ValueError:
             return templates.TemplateResponse(request, "settings.html", {
                 **get_profile_safe(user), "username": user["username"],
-                "welcome": "", "error": "That due date doesn't look valid."}, status_code=400)
+                "welcome": "", "error": "That due date doesn't look valid.",
+                "theme": "peach", "email": email}, status_code=400)
     with get_db() as db:
+        if email:
+            existing = get_user_by_email(db, email)
+            me = get_user_by_name(db, user["username"])
+            if existing and existing["id"] != me["id"]:
+                return templates.TemplateResponse(request, "settings.html", {
+                    **get_profile(db, user["id"]), "username": user["username"],
+                    "welcome": "", "error": "That email is already connected to another account.",
+                    "theme": "peach", "email": email}, status_code=400)
         save_profile(db, user["id"], baby_name, due_date or None)
+        set_email(db, user["id"], email)
     return RedirectResponse("/", status_code=303)
 
 
 def get_profile_safe(user):
     with get_db() as db:
         return get_profile(db, user["id"])
+
+
+@app.get("/forgot", response_class=HTMLResponse)
+async def forgot_page(request: Request, sent: str = ""):
+    return templates.TemplateResponse(request, "forgot.html", {"sent": sent})
+
+
+@app.post("/forgot")
+async def forgot_submit(request: Request, email: str = Form(...)):
+    email = email.strip().lower()
+    token = None
+    with get_db() as db:
+        user = get_user_by_email(db, email) if _valid_email(email) else None
+        if user:
+            token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            expires = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)).isoformat()
+            add_password_reset(db, user["id"], token_hash, expires)
+    if token:
+        base = str(request.base_url).rstrip("/")
+        link = f"{base}/reset?token={token}"
+        mailer.send_email(email, "Reset your Baby Prep password",
+            f"""<p>Hello!</p>
+            <p>Someone asked to reset the password for the Baby Prep account <strong>{user['username']}</strong>.</p>
+            <p><a href="{link}">Choose a new password</a></p>
+            <p style="color:#888">This link works once and expires in one hour. If this wasn't you, just ignore this email.</p>""")
+    return RedirectResponse("/forgot?sent=1", status_code=303)
+
+
+@app.get("/reset", response_class=HTMLResponse)
+async def reset_page(request: Request, token: str = "", error: str = ""):
+    token_hash = hashlib.sha256(token.encode()).hexdigest() if token else ""
+    valid = False
+    if token:
+        with get_db() as db:
+            row = get_password_reset(db, token_hash)
+            valid = bool(row and not row["used"] and row["expires_at"] >
+                         dt.datetime.now(dt.timezone.utc).isoformat())
+    return templates.TemplateResponse(request, "reset.html",
+        {"token": token, "valid": valid, "error": error})
+
+
+@app.post("/reset")
+async def reset_submit(request: Request, token: str = Form(...),
+                       password: str = Form(...), password2: str = Form(...)):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    with get_db() as db:
+        row = get_password_reset(db, token_hash)
+        valid = bool(row and not row["used"] and row["expires_at"] >
+                     dt.datetime.now(dt.timezone.utc).isoformat())
+        if not valid:
+            return templates.TemplateResponse(request, "reset.html",
+                {"token": "", "valid": False,
+                 "error": ""}, status_code=400)
+        if len(password) < 6:
+            return templates.TemplateResponse(request, "reset.html",
+                {"token": token, "valid": True,
+                 "error": "Password needs at least 6 characters."}, status_code=400)
+        if password != password2:
+            return templates.TemplateResponse(request, "reset.html",
+                {"token": token, "valid": True,
+                 "error": "The two passwords don't match."}, status_code=400)
+        set_password_hash(db, row["user_id"], auth.hash_password(password))
+        destroy_user_sessions(db, row["user_id"])
+        consume_password_reset(db, token_hash)
+    response = RedirectResponse("/login?reset=1", status_code=303)
+    return response
 
 @app.get("/health")
 async def health():

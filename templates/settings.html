@@ -54,6 +54,11 @@
         <p class="mt-1 text-xs text-stone-400">The season your baby arrives in sets the capsule — winter, spring, summer or autumn.</p>
       </div>
       <div>
+        <label class="text-xs font-semibold text-stone-500">Email (optional, for password recovery)</label>
+        <input type="email" name="email" value="{{ email or '' }}" placeholder="you@example.com" class="mt-1 w-full rounded-xl border border-blush-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blush-400">
+        <p class="mt-1 text-xs text-stone-400">Only used to send a reset link if you ever forget your password.</p>
+      </div>
+      <div>
         <label class="text-xs font-semibold text-stone-500">Theme</label>
         <div class="mt-2 flex items-center gap-3">
           <button type="button" class="theme-dot" data-theme="peach" title="Peach" style="background:rgb(215 131 121)"></button>
