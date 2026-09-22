@@ -397,12 +397,28 @@ async def settings_save(request: Request, baby_name: str = Form(""), due_date: s
     if not user:
         return RedirectResponse("/login", status_code=303)
     baby_name = baby_name.strip()[:40]
-    email = email.strip().lower()
-    if not email or not _valid_email(email):
-        return templates.TemplateResponse(request, "settings.html", {
-            **get_profile_safe(user), "username": user["username"],
-            "welcome": "", "error": "Please enter a valid email address — it's needed for password recovery.",
-            "theme": "peach", "email": email}, status_code=400)
+
+    # The email belongs to the account flow: accounts created since email
+    # became required never see this field again. Only accounts that still
+    # have no email (created earlier) get asked once here.
+    with get_db() as db:
+        me = get_user_by_name(db, user["username"])
+        current_email = me["email"] if me else None
+    if not current_email:
+        email = email.strip().lower()
+        if not email or not _valid_email(email):
+            return templates.TemplateResponse(request, "settings.html", {
+                **get_profile_safe(user), "username": user["username"],
+                "welcome": "", "error": "Please enter a valid email address — it's needed for password recovery.",
+                "theme": "peach", "email": ""}, status_code=400)
+        with get_db() as db:
+            existing = get_user_by_email(db, email)
+            if existing and existing["id"] != me["id"]:
+                return templates.TemplateResponse(request, "settings.html", {
+                    **get_profile(db, user["id"]), "username": user["username"],
+                    "welcome": "", "error": "That email is already connected to another account.",
+                    "theme": "peach", "email": ""}, status_code=400)
+            set_email(db, user["id"], email)
     if due_date:
         try:
             dt.date.fromisoformat(due_date)
@@ -410,18 +426,9 @@ async def settings_save(request: Request, baby_name: str = Form(""), due_date: s
             return templates.TemplateResponse(request, "settings.html", {
                 **get_profile_safe(user), "username": user["username"],
                 "welcome": "", "error": "That due date doesn't look valid.",
-                "theme": "peach", "email": email}, status_code=400)
+                "theme": "peach", "email": current_email}, status_code=400)
     with get_db() as db:
-        if email:
-            existing = get_user_by_email(db, email)
-            me = get_user_by_name(db, user["username"])
-            if existing and existing["id"] != me["id"]:
-                return templates.TemplateResponse(request, "settings.html", {
-                    **get_profile(db, user["id"]), "username": user["username"],
-                    "welcome": "", "error": "That email is already connected to another account.",
-                    "theme": "peach", "email": email}, status_code=400)
         save_profile(db, user["id"], baby_name, due_date or None)
-        set_email(db, user["id"], email)
     return RedirectResponse("/", status_code=303)
 
 
