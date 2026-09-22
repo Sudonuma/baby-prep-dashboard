@@ -784,7 +784,18 @@
         },
         getIdForLayer(layer){
           const name = String(layer).toLowerCase().trim();
-          for(const item of this.wardrobe.concat(this.sleep, this.care, this.gear, this.leisure, this.mom)){
+          // "Day outfit" means the Everyday soft recipe (body + romper + socks);
+          // its availability is the scarcest of the three.
+          if(name === 'day outfit'){
+            const ids = ['Long-sleeve bodysuit','Romper','Socks / booties']
+              .map(l => this.exactId(String(l).toLowerCase()));
+            if(ids.some(id => !id)) return null;
+            return ids.sort((a,b) => this.ownedTotal(a) - this.ownedTotal(b))[0];
+          }
+          return this.exactId(name);
+        },
+        exactId(name){
+          for(const item of allItems){
             const iname = String(item.name).toLowerCase();
             if(iname === name) return item.id;
             if(iname.includes(name) || name.includes(iname)) return item.id;
