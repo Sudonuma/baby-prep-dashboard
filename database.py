@@ -49,6 +49,28 @@ def init_db():
             db.execute("ALTER TABLE users ADD COLUMN email TEXT")
         except sqlite3.OperationalError:
             pass  # column already there
+        _make_username_non_unique(db)
+
+
+def _make_username_non_unique(db):
+    """Usernames are display names now; only emails identify an account.
+    Rebuild the users table without UNIQUE(username) when an old schema
+    still carries it."""
+    for idx in db.execute("PRAGMA index_list(users)").fetchall():
+        cols = [r["name"] for r in db.execute(
+            f"PRAGMA index_info({idx['name']})").fetchall()]
+        if idx["unique"] and cols == ["username"]:
+            db.execute("""CREATE TABLE users_new(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL,
+                password_hash TEXT NOT NULL,
+                created_at TEXT DEFAULT CURRENT_TIMESTAMP,
+                email TEXT)""")
+            db.execute("""INSERT INTO users_new(id, username, password_hash, created_at, email)
+                          SELECT id, username, password_hash, created_at, email FROM users""")
+            db.execute("DROP TABLE users")
+            db.execute("ALTER TABLE users_new RENAME TO users")
+            break
 
 
 def get_state(db, user_id: int) -> dict:
@@ -82,6 +104,10 @@ def create_user(db, username: str, password_hash: str, email=None) -> int:
 
 def get_user_by_name(db, username: str):
     return db.execute("SELECT * FROM users WHERE username=?", (username,)).fetchone()
+
+
+def get_users_by_name(db, username: str):
+    return db.execute("SELECT * FROM users WHERE username=?", (username,)).fetchall()
 
 
 def get_user_by_email(db, email: str):

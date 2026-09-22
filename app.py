@@ -313,13 +313,12 @@ async def login_page(request: Request, error: str = "", reset: str = ""):
 
 
 @app.post("/login")
-async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+async def login(request: Request, identifier: str = Form(...), password: str = Form(...)):
     with get_db() as db:
-        user = auth.authenticate(db, username, password)
+        user, error = auth.authenticate(db, identifier, password)
         if not user:
             return templates.TemplateResponse(
-                request, "login.html",
-                {"error": "Wrong username or password."}, status_code=401)
+                request, "login.html", {"error": error, "reset": ""}, status_code=401)
         token = auth.create_session(db, user["id"])
     response = RedirectResponse("/", status_code=303)
     response.set_cookie(auth.SESSION_COOKIE, token, httponly=True, samesite="lax")
@@ -356,9 +355,6 @@ async def register(request: Request, username: str = Form(...),
         return templates.TemplateResponse(request, "register.html",
             {"error": "Please enter a valid email address — it's needed for password recovery."}, status_code=400)
     with get_db() as db:
-        if get_user_by_name(db, username):
-            return templates.TemplateResponse(request, "register.html",
-                {"error": "That username is already taken."}, status_code=400)
         if email and get_user_by_email(db, email):
             return templates.TemplateResponse(request, "register.html",
                 {"error": "That email is already connected to another account."}, status_code=400)
