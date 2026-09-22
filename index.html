@@ -428,7 +428,7 @@
                   <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
                     <template x-for="url in linksFor(item.id)" :key="url">
                       <span class="inline-flex items-center gap-1 rounded-full bg-blush-50 px-2 py-1 font-medium text-blush-700">
-                        <a :href="url" target="_blank" rel="noopener" class="inline-flex items-center gap-1 hover:underline" x-text="'🔗 ' + hostOf(url)"></a>
+                        <a :href="url" target="_blank" rel="noopener" :title="url" class="inline-flex items-center gap-1 hover:underline" x-text="'🔗 ' + hostOf(url)"></a>
                         <button @click="removeLink(item.id, url)" class="text-blush-400 transition hover:text-rose-500">✕</button>
                       </span>
                     </template>
@@ -796,7 +796,19 @@
           const d=(this.itemById(id)||{}).purchase_url;
           return d ? [d] : [];
         },
-        hostOf(url){ try { return new URL(url).hostname.replace(/^www\./,''); } catch(e){ return url; } },
+        hostOf(url){
+          // the brand part of the domain: "www.amazon.de" → amazon, "de.momcozy.com" → momcozy
+          try {
+            const h = new URL(url).hostname.replace(/^www\./,'');
+            const parts = h.split('.');
+            let brand = parts.length >= 2 ? parts[parts.length-2] : h;
+            const secondLevel = ['co','com','org','net','gov','ac'];
+            if (parts.length >= 3 && secondLevel.includes(parts[parts.length-2])) {
+              brand = parts[parts.length-3];
+            }
+            return brand || h;
+          } catch(e){ return url; }
+        },
         addLink(id){
           const raw=(this.linkDraft||'').trim();
           if(raw){
