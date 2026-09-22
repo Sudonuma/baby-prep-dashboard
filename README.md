@@ -13,6 +13,14 @@ uvicorn app:app --reload
 
 Open http://127.0.0.1:8000
 
+## Try it on your phone (same Wi-Fi)
+
+Start the server for the network (`--host 0.0.0.0`), find your machine's IP (`hostname -I`), then on the phone open `http://<IP>:8123`. In Safari: Share → **Add to Home Screen** for the app icon.
+
+## Deploying (install from anywhere)
+
+`render.yaml` is a Render blueprint: push the repo to GitHub, create a "Blueprint" service on render.com, and it deploys with a persistent disk for the SQLite database (accounts + dashboards survive restarts; the small paid instance is required for the disk). Any HTTPS host works too — the PWA (manifest, icons, service worker) is already set up, so once deployed, iPhone users install via Safari → Share → Add to Home Screen.
+
 ## Accounts & personalization
 
 - Register at `/register` (or log in at `/login`). Accounts and profiles live in a local SQLite database at `data/app.db` — auto-created on first start, gitignored.

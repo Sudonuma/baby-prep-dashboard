@@ -41,5 +41,8 @@ Work top-to-bottom: each phase builds on the one before it.
 
 ## Before sharing publicly
 
+- [x] Email-based password recovery: optional email at signup and in Baby details, forgot-password flow with one-hour single-use links. Sends via Resend when `RESEND_API_KEY` is set (plus `MAIL_FROM`); without a key, emails print to the server console for local testing.
+- [ ] Email verification at signup: send a "confirm your email" link after registration; show a gentle banner on unconfirmed accounts (needs Resend configured in production)
+- [ ] Social login: "Sign in with Google" (and possibly Apple) as an alternative to username/password
 - [ ] Neutral default item list: the public version shouldn't default to one person's chosen brands and purchase links
 - [ ] Data safety: export/import (or server-side storage) so clearing browser storage doesn't wipe progress

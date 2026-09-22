@@ -1,0 +1,15 @@
+# Render blueprint: creates the web service + a persistent disk for the
+# SQLite database so accounts and dashboards survive deploys and restarts.
+# Deploy: push this branch to GitHub, then on render.com choose
+# "New +" -> "Blueprint" and select this repository.
+services:
+  - type: web
+    name: baby-prep
+    runtime: python
+    plan: starter
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    disk:
+      name: baby-prep-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1

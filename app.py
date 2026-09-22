@@ -1,5 +1,7 @@
 import datetime as dt
+import hashlib
 import json
+import secrets
 
 from fastapi import FastAPI, Form, Request
 from fastapi.responses import HTMLResponse, JSONResponse, RedirectResponse
@@ -7,8 +9,11 @@ from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 
 import auth
-from database import (create_user, get_db, get_profile, get_state, get_user_by_name,
-                      init_db, save_profile, save_state)
+import mailer
+from database import (add_password_reset, consume_password_reset, create_user, get_db,
+                      get_password_reset, get_profile, get_state, get_user_by_email,
+                      get_user_by_name, init_db, save_profile, save_state,
+                      set_email, set_password_hash, destroy_user_sessions)
 
 app = FastAPI(title="Baby Prep Dashboard")
 app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -21,16 +26,16 @@ init_db()
 # months, 62 ≈ 3–6 months). Defaults follow the usual guidance: keep size 50
 # small because the stage is short, carry the working wardrobe in 56/62.
 WARDROBE = [
-    {"id":"body","name":"Long-sleeve bodysuit","type":"Base","icon":"▱","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":4,"56":6,"62":6},"unit":"pieces","note":"Your everyday base layer. Keep several in easy-wash cotton.","preferred_colors":["white","beige","soft peachy pink"]},
-    {"id":"sleep","name":"Footed sleepsuit / all-in-one","type":"Sleep","icon":"☾","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":5,"62":5},"unit":"pieces","note":"Useful for nights and simple daytime outfits. Footed versions reduce the need for socks."},
-    {"id":"romper","name":"Romper","type":"Day","icon":"✿","brand":"Little Dutch","sizes":["50","56","62"],"size_targets":{"50":1,"56":3,"62":3},"unit":"pieces","note":"A cute one-piece daytime option; add socks/booties if legs are uncovered."},
-    {"id":"trousers","name":"Trousers / leggings","type":"Day","icon":"✿","brand":"Mayoral","sizes":["50","56","62"],"size_targets":{"50":1,"56":3,"62":3},"unit":"pieces","note":"Pair with a long-sleeve bodysuit; use soft waistbands."},
-    {"id":"cardigan","name":"Soft cardigan","type":"Layer","icon":"⌁","brand":"Little Dutch / Mayoral","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":"Prefer several light layers over one very heavy layer."},
-    {"id":"top","name":"Long-sleeve top","type":"Day","icon":"✿","brand":"Mayoral / Next","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":"Use over a bodysuit when you want a more dressed look."},
+    {"id":"body","name":"Long-sleeve bodysuit","type":"Base","icon":"▱","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":4,"56":6,"62":6},"unit":"pieces","note":"","preferred_colors":["white","beige","soft peachy pink"]},
+    {"id":"sleep","name":"Footed sleepsuit / all-in-one","type":"Sleep","icon":"☾","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":5,"62":5},"unit":"pieces","note":""},
+    {"id":"romper","name":"Romper","type":"Day","icon":"✿","brand":"Little Dutch","sizes":["50","56","62"],"size_targets":{"50":1,"56":3,"62":3},"unit":"pieces","note":""},
+    {"id":"trousers","name":"Trousers / leggings","type":"Day","icon":"✿","brand":"Mayoral","sizes":["50","56","62"],"size_targets":{"50":1,"56":3,"62":3},"unit":"pieces","note":"Pair with a long-sleeve bodysuit."},
+    {"id":"cardigan","name":"Soft cardigan","type":"Layer","icon":"⌁","brand":"Little Dutch / Mayoral","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":""},
+    {"id":"top","name":"Long-sleeve top","type":"Day","icon":"✿","brand":"Mayoral / Next","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":""},
     {"id":"knitromper","name":"Sleeveless knitted romper / pinafore","type":"Cute","icon":"♡","brand":"Little Dutch","sizes":["56","62"],"size_targets":{"56":2,"62":2},"unit":"pieces","note":"Layer over a long-sleeve bodysuit or top."},
-    {"id":"socks","name":"Socks / booties","type":"Accessory","icon":"◌","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":6,"62":6},"unit":"pairs","note":"Only needed when feet are not covered by the outfit."},
-    {"id":"hat","name":"Warm hat","type":"Outdoor","icon":"❄","brand":"Sanetta / Next","sizes":["50","56","62"],"size_targets":{"50":1,"56":2,"62":1},"unit":"pieces","note":"For outdoor cold. Remove indoors and in warm cars/public transport."},
-    {"id":"outer","name":"Warm outer suit / pramsuit","type":"Outdoor","icon":"❄","brand":"","sizes":["50","56","62"],"size_targets":{"50":1,"56":1,"62":1},"unit":"piece","note":"For outdoor winter use. The exact outer layer depends on temperature and transport setup."},
+    {"id":"socks","name":"Socks / booties","type":"Accessory","icon":"◌","brand":"Sanetta","sizes":["50","56","62"],"size_targets":{"50":3,"56":6,"62":6},"unit":"pairs","note":""},
+    {"id":"hat","name":"Warm hat","type":"Outdoor","icon":"❄","brand":"Sanetta / Next","sizes":["50","56","62"],"size_targets":{"50":1,"56":2,"62":1},"unit":"pieces","note":"For outdoor cold."},
+    {"id":"outer","name":"Warm outer suit / pramsuit","type":"Outdoor","icon":"❄","brand":"","sizes":["50","56","62"],"size_targets":{"50":1,"56":1,"62":1},"unit":"piece","note":""},
 ]
 
 # Sleep is its own top-level category, filtered by group like clothing is
@@ -38,11 +43,11 @@ WARDROBE = [
 # localStorage keep working.
 SLEEP = [
     {"id":"swaddle","name":"Swaddle","type":"Essential","icon":"☾","brand":"MomCozy","sizes":["50–62"],"target":2,"unit":"pieces","note":"Light breathable swaddle or sleepsack for safe sleep.","purchase_url":"https://de.momcozy.com/products/breathable-newborn-swaddle-for-cooler-comfier-sleep-copy-1?variant=49916095267056","group":"Essentials"},
-    {"id":"sleevesack","name":"Sleeveless sleepsack","type":"Essential","icon":"☾","brand":"","sizes":["50–62"],"target":1,"unit":"piece","note":"Sleeveless sleepsack for safe, layered sleep. Consider one to alternate with swaddles.","group":"Essentials"},
+    {"id":"sleevesack","name":"Sleeveless sleepsack","type":"Essential","icon":"☾","brand":"","sizes":["50–62"],"target":1,"unit":"piece","note":"","group":"Essentials"},
     {"id":"crib","name":"Crib","type":"Essential","icon":"🛏️","brand":"","target":1,"unit":"piece","note":"The main safe sleep space; a full-size crib lasts into toddlerhood.","group":"Essentials"},
     {"id":"bassinet","name":"Bassinet or bedside sleeper","type":"Essential","icon":"🛌","brand":"","target":1,"unit":"piece","note":"Keeps baby within arm's reach for night feeds in the first months.","group":"Essentials"},
     {"id":"cribmattress","name":"Crib mattress","type":"Essential","icon":"📏","brand":"","target":1,"unit":"piece","note":"Firm, flat and snug-fitting, with no gap to the crib frame.","group":"Essentials"},
-    {"id":"cribsheets","name":"Crib sheets","type":"Essential","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"Keep a spare so a wet sheet never leaves the crib uncovered.","group":"Essentials"},
+    {"id":"cribsheets","name":"Crib sheets","type":"Essential","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"","group":"Essentials"},
     {"id":"monitor","name":"Baby monitor","type":"Optional","icon":"📡","brand":"","target":1,"unit":"piece","note":"Peace of mind once baby sleeps in a separate room.","group":"Optional"},
     {"id":"whitenoise","name":"White noise machine","type":"Optional","icon":"🔊","brand":"","target":1,"unit":"piece","note":"Helps some babies settle; keep the volume low and place it away from the crib.","group":"Optional"},
 ]
@@ -59,7 +64,7 @@ LEISURE = [
 # (targets are editable planning defaults; "packs" items assume you restock).
 CARE = [
     {"id":"changepad","name":"Changing pad","type":"Diapering","icon":"🧷","brand":"","target":1,"unit":"piece","note":"A washable mat for changes at home and on the go.","group":"Diapering"},
-    {"id":"padcovers","name":"Changing pad covers","type":"Diapering","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"Keep a spare so a wet cover never stops a change.","group":"Diapering"},
+    {"id":"padcovers","name":"Changing pad covers","type":"Diapering","icon":"🧺","brand":"","target":2,"unit":"pieces","note":"","group":"Diapering"},
     {"id":"changingtable","name":"Changing table","type":"Diapering","icon":"🪑","brand":"","target":1,"unit":"piece","note":"A comfortable-height changing spot; always keep one hand on the baby.","group":"Diapering"},
     {"id":"cream","name":"Cream / ointment","type":"Diapering","icon":"🧴","brand":"","target":1,"unit":"piece","note":"Barrier cream for sore bottoms; a little goes a long way.","group":"Diapering"},
     {"id":"diapers","name":"Diapers","type":"Diapering","icon":"🧻","brand":"","target":2,"unit":"packs","note":"Newborns use 8–10 diapers a day. Start with two newborn-size packs and buy more once the fit is confirmed.","group":"Diapering"},
@@ -77,15 +82,15 @@ CARE = [
     {"id":"firstaid","name":"First aid kit","type":"Care","icon":"🩹","brand":"","target":1,"unit":"piece","note":"Basics for small emergencies; keep the pediatrician's number with it.","group":"Care"},
     {"id":"nasalaspirator","name":"Nasal aspirator","type":"Care","icon":"👃","brand":"","target":1,"unit":"piece","note":"Clears a blocked nose before feeds and sleep.","group":"Care"},
     {"id":"pacifiers","name":"Pacifiers","type":"Care","icon":"😙","brand":"","target":2,"unit":"pieces","note":"Babies are picky about shapes; try one or two and keep a spare.","group":"Care"},
-    {"id":"teethers","name":"Teethers","type":"Care","icon":"🦷","brand":"","target":2,"unit":"pieces","note":"Chillable teethers for gum comfort; useful from a few months.","group":"Care"},
-    {"id":"brushcomb","name":"Brush & comb","type":"Care","icon":"💈","brand":"","target":1,"unit":"piece","note":"Soft-bristle brush for the first hair and cradle-cap care.","group":"Care"},
+    {"id":"teethers","name":"Teethers","type":"Care","icon":"🦷","brand":"","target":2,"unit":"pieces","note":"","group":"Care"},
+    {"id":"brushcomb","name":"Brush & comb","type":"Care","icon":"💈","brand":"","target":1,"unit":"piece","note":"","group":"Care"},
 ]
 
 # Big-ticket gear for transport and safe places to put baby down.
 GEAR = [
     {"id":"stroller","name":"Stroller","type":"Gear","icon":"🚼","brand":"","target":1,"unit":"piece","note":"The daily workhorse. Check it fits your car boot and hallway; a lie-flat or bassinet option is best for newborns."},
     {"id":"carseat","name":"Infant car seat","type":"Gear","icon":"💺","brand":"","target":1,"unit":"piece","note":"Needed from the first ride home. i-Size (R129) is the current EU standard; a stay-in car base makes loading easier."},
-    {"id":"carrier","name":"Structured carrier or wrap carrier","type":"Gear","icon":"🎒","brand":"","target":1,"unit":"piece","note":"Hands-free closeness; newborn-friendly wraps or carriers with infant inserts work from day one."},
+    {"id":"carrier","name":"Structured carrier or wrap carrier","type":"Gear","icon":"🎒","brand":"","target":1,"unit":"piece","note":""},
     {"id":"bouncer","name":"Bouncer","type":"Gear","icon":"🪑","brand":"","target":1,"unit":"piece","note":"A safe spot to put baby down awake; the gentle bounce soothes many newborns."},
     {"id":"playard","name":"Playard / travel crib","type":"Gear","icon":"🧳","brand":"","target":1,"unit":"piece","note":"A portable sleep and play spot for travel and grandparents' houses."},
     {"id":"swing","name":"Swing","type":"Gear","icon":"🛝","brand":"","target":1,"unit":"piece","note":"Powered soothing for fussy phases; a nice-to-have — try one before buying if you can."},
@@ -119,15 +124,15 @@ CATEGORY_BRANDS = {
 
 # Mum's own kit: nursing essentials and postpartum care.
 MOM = [
-    {"id":"nursingpads","name":"Nursing pads","type":"Nursing","icon":"☁️","brand":"","target":2,"unit":"packs","note":"Leak protection between feeds; disposables for the first weeks, washable for later.","group":"Nursing"},
+    {"id":"nursingpads","name":"Nursing pads","type":"Nursing","icon":"☁️","brand":"","target":2,"unit":"packs","note":"","group":"Nursing"},
     {"id":"silvercups","name":"Silver cups","type":"Nursing","icon":"🥈","brand":"","target":1,"unit":"pair","note":"Silver nursing cups protect and soothe sore nipples between feeds — no cream needed while wearing them.","group":"Nursing"},
     {"id":"milkpumps","name":"Milk pumps","type":"Nursing","icon":"🍼","brand":"","target":1,"unit":"piece","note":"Electric for regular pumping, small manual for occasional. German statutory insurance usually covers one with a prescription.","group":"Nursing"},
     {"id":"nursingbras","name":"Nursing bras","type":"Nursing","icon":"🎀","brand":"","target":3,"unit":"pieces","note":"Buy from ~week 34 when size has settled; stretchy, front-opening, one in the wash at all times.","group":"Nursing"},
     {"id":"nursingpillow","name":"Nursing pillow","type":"Nursing","icon":"🤱","brand":"","target":1,"unit":"piece","note":"Supports feeding positions — and doubles as a tummy-time support later.","group":"Nursing"},
     {"id":"nipplecream","name":"Nipple creams","type":"Nursing","icon":"🧴","brand":"","target":1,"unit":"piece","note":"Pure lanolin is safe for baby; a little goes a long way.","group":"Nursing"},
 
-    {"id":"maternitypads","name":"Maternity pads","type":"Health & care","icon":"🩸","brand":"","target":3,"unit":"packs","note":"The thick kind for the first days and weeks postpartum.","group":"Health & care"},
-    {"id":"maternityunderwear","name":"Maternity underwear","type":"Health & care","icon":"🩲","brand":"","target":4,"unit":"pieces","note":"High-waisted, soft-waist briefs that hold pads securely and sit comfortably.","group":"Health & care"},
+    {"id":"maternitypads","name":"Maternity pads","type":"Health & care","icon":"🩸","brand":"","target":3,"unit":"packs","note":"","group":"Health & care"},
+    {"id":"maternityunderwear","name":"Maternity underwear","type":"Health & care","icon":"🩲","brand":"","target":4,"unit":"pieces","note":"","group":"Health & care"},
     {"id":"pyjamas","name":"Comfortable pyjamas","type":"Health & care","icon":"😴","brand":"","target":2,"unit":"pieces","note":"Button-front tops make nursing easier; darker or patterned fabrics hide leaks.","group":"Health & care"},
 ]
 
@@ -301,20 +306,19 @@ async def set_theme(request: Request):
 
 
 @app.get("/login", response_class=HTMLResponse)
-async def login_page(request: Request, error: str = ""):
+async def login_page(request: Request, error: str = "", reset: str = ""):
     if auth.current_user(request):
         return RedirectResponse("/", status_code=303)
-    return templates.TemplateResponse(request, "login.html", {"error": error})
+    return templates.TemplateResponse(request, "login.html", {"error": error, "reset": reset})
 
 
 @app.post("/login")
-async def login(request: Request, username: str = Form(...), password: str = Form(...)):
+async def login(request: Request, identifier: str = Form(...), password: str = Form(...)):
     with get_db() as db:
-        user = auth.authenticate(db, username, password)
+        user, error = auth.authenticate(db, identifier, password)
         if not user:
             return templates.TemplateResponse(
-                request, "login.html",
-                {"error": "Wrong username or password."}, status_code=401)
+                request, "login.html", {"error": error, "reset": ""}, status_code=401)
         token = auth.create_session(db, user["id"])
     response = RedirectResponse("/", status_code=303)
     response.set_cookie(auth.SESSION_COOKIE, token, httponly=True, samesite="lax")
@@ -328,10 +332,16 @@ async def register_page(request: Request, error: str = ""):
     return templates.TemplateResponse(request, "register.html", {"error": error})
 
 
+def _valid_email(email: str) -> bool:
+    return "@" in email and "." in email.split("@")[-1] and " " not in email
+
+
 @app.post("/register")
 async def register(request: Request, username: str = Form(...),
-                   password: str = Form(...), password2: str = Form(...)):
+                   password: str = Form(...), password2: str = Form(...),
+                   email: str = Form("")):
     username = username.strip()
+    email = email.strip().lower()
     if len(username) < 3:
         return templates.TemplateResponse(request, "register.html",
             {"error": "Username needs at least 3 characters."}, status_code=400)
@@ -341,11 +351,14 @@ async def register(request: Request, username: str = Form(...),
     if password != password2:
         return templates.TemplateResponse(request, "register.html",
             {"error": "The two passwords don't match."}, status_code=400)
+    if not email or not _valid_email(email):
+        return templates.TemplateResponse(request, "register.html",
+            {"error": "Please enter a valid email address — it's needed for password recovery."}, status_code=400)
     with get_db() as db:
-        if get_user_by_name(db, username):
+        if email and get_user_by_email(db, email):
             return templates.TemplateResponse(request, "register.html",
-                {"error": "That username is already taken."}, status_code=400)
-        user_id = create_user(db, username, auth.hash_password(password))
+                {"error": "That email is already connected to another account."}, status_code=400)
+        user_id = create_user(db, username, auth.hash_password(password), email)
         token = auth.create_session(db, user_id)
     response = RedirectResponse("/settings?welcome=1", status_code=303)
     response.set_cookie(auth.SESSION_COOKIE, token, httponly=True, samesite="lax")
@@ -371,24 +384,49 @@ async def settings_page(request: Request, welcome: str = "", error: str = ""):
     with get_db() as db:
         profile = get_profile(db, user["id"])
         theme = get_state(db, user["id"]).get("theme") or "peach"
+        email = (get_user_by_name(db, user["username"]) or {"email": None})["email"]
     return templates.TemplateResponse(request, "settings.html", {
         **profile, "username": user["username"], "welcome": welcome,
-        "error": error, "theme": theme})
+        "error": error, "theme": theme, "email": email})
 
 
 @app.post("/settings")
-async def settings_save(request: Request, baby_name: str = Form(""), due_date: str = Form("")):
+async def settings_save(request: Request, baby_name: str = Form(""), due_date: str = Form(""),
+                        email: str = Form("")):
     user = auth.current_user(request)
     if not user:
         return RedirectResponse("/login", status_code=303)
     baby_name = baby_name.strip()[:40]
+
+    # The email belongs to the account flow: accounts created since email
+    # became required never see this field again. Only accounts that still
+    # have no email (created earlier) get asked once here.
+    with get_db() as db:
+        me = get_user_by_name(db, user["username"])
+        current_email = me["email"] if me else None
+    if not current_email:
+        email = email.strip().lower()
+        if not email or not _valid_email(email):
+            return templates.TemplateResponse(request, "settings.html", {
+                **get_profile_safe(user), "username": user["username"],
+                "welcome": "", "error": "Please enter a valid email address — it's needed for password recovery.",
+                "theme": "peach", "email": ""}, status_code=400)
+        with get_db() as db:
+            existing = get_user_by_email(db, email)
+            if existing and existing["id"] != me["id"]:
+                return templates.TemplateResponse(request, "settings.html", {
+                    **get_profile(db, user["id"]), "username": user["username"],
+                    "welcome": "", "error": "That email is already connected to another account.",
+                    "theme": "peach", "email": ""}, status_code=400)
+            set_email(db, user["id"], email)
     if due_date:
         try:
             dt.date.fromisoformat(due_date)
         except ValueError:
             return templates.TemplateResponse(request, "settings.html", {
                 **get_profile_safe(user), "username": user["username"],
-                "welcome": "", "error": "That due date doesn't look valid."}, status_code=400)
+                "welcome": "", "error": "That due date doesn't look valid.",
+                "theme": "peach", "email": current_email}, status_code=400)
     with get_db() as db:
         save_profile(db, user["id"], baby_name, due_date or None)
     return RedirectResponse("/", status_code=303)
@@ -397,6 +435,73 @@ async def settings_save(request: Request, baby_name: str = Form(""), due_date: s
 def get_profile_safe(user):
     with get_db() as db:
         return get_profile(db, user["id"])
+
+
+@app.get("/forgot", response_class=HTMLResponse)
+async def forgot_page(request: Request, sent: str = ""):
+    return templates.TemplateResponse(request, "forgot.html", {"sent": sent})
+
+
+@app.post("/forgot")
+async def forgot_submit(request: Request, email: str = Form(...)):
+    email = email.strip().lower()
+    token = None
+    with get_db() as db:
+        user = get_user_by_email(db, email) if _valid_email(email) else None
+        if user:
+            token = secrets.token_urlsafe(32)
+            token_hash = hashlib.sha256(token.encode()).hexdigest()
+            expires = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=1)).isoformat()
+            add_password_reset(db, user["id"], token_hash, expires)
+    if token:
+        base = str(request.base_url).rstrip("/")
+        link = f"{base}/reset?token={token}"
+        mailer.send_email(email, "Reset your Baby Prep password",
+            f"""<p>Hello!</p>
+            <p>Someone asked to reset the password for the Baby Prep account <strong>{user['username']}</strong>.</p>
+            <p><a href="{link}">Choose a new password</a></p>
+            <p style="color:#888">This link works once and expires in one hour. If this wasn't you, just ignore this email.</p>""")
+    return RedirectResponse("/forgot?sent=1", status_code=303)
+
+
+@app.get("/reset", response_class=HTMLResponse)
+async def reset_page(request: Request, token: str = "", error: str = ""):
+    token_hash = hashlib.sha256(token.encode()).hexdigest() if token else ""
+    valid = False
+    if token:
+        with get_db() as db:
+            row = get_password_reset(db, token_hash)
+            valid = bool(row and not row["used"] and row["expires_at"] >
+                         dt.datetime.now(dt.timezone.utc).isoformat())
+    return templates.TemplateResponse(request, "reset.html",
+        {"token": token, "valid": valid, "error": error})
+
+
+@app.post("/reset")
+async def reset_submit(request: Request, token: str = Form(...),
+                       password: str = Form(...), password2: str = Form(...)):
+    token_hash = hashlib.sha256(token.encode()).hexdigest()
+    with get_db() as db:
+        row = get_password_reset(db, token_hash)
+        valid = bool(row and not row["used"] and row["expires_at"] >
+                     dt.datetime.now(dt.timezone.utc).isoformat())
+        if not valid:
+            return templates.TemplateResponse(request, "reset.html",
+                {"token": "", "valid": False,
+                 "error": ""}, status_code=400)
+        if len(password) < 6:
+            return templates.TemplateResponse(request, "reset.html",
+                {"token": token, "valid": True,
+                 "error": "Password needs at least 6 characters."}, status_code=400)
+        if password != password2:
+            return templates.TemplateResponse(request, "reset.html",
+                {"token": token, "valid": True,
+                 "error": "The two passwords don't match."}, status_code=400)
+        set_password_hash(db, row["user_id"], auth.hash_password(password))
+        destroy_user_sessions(db, row["user_id"])
+        consume_password_reset(db, token_hash)
+    response = RedirectResponse("/login?reset=1", status_code=303)
+    return response
 
 @app.get("/health")
 async def health():

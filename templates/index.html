@@ -7,6 +7,12 @@
   <script>document.documentElement.dataset.theme = localStorage.getItem('babyTheme') || 'peach';</script>
   {% if server_theme %}<script>document.documentElement.dataset.theme = '{{ server_theme }}';</script>{% endif %}
   <link rel="stylesheet" href="/static/themes.css">
+  <link rel="manifest" href="/static/manifest.webmanifest">
+  <meta name="theme-color" content="#d78379">
+  <link rel="apple-touch-icon" href="/static/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Baby Prep">
   <script src="https://cdn.tailwindcss.com"></script>
   <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
   <script>
@@ -64,11 +70,41 @@
       </div>
     </aside>
 
+    <!-- Mobile bottom navigation -->
+    <nav class="fixed inset-x-0 bottom-0 z-30 flex border-t border-blush-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <button @click="goTo('All'); moreOpen=false" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="filter==='All' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🏡</span>Home</button>
+      <button @click="goTo('Clothing','wardrobe-section'); moreOpen=false" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="filter==='Clothing' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">👕</span>Clothing</button>
+      <button @click="goTo('SleepSetup','sleep-section'); moreOpen=false" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="filter==='SleepSetup' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🌙</span>Sleep</button>
+      <button @click="goTo('CareSetup','care-section'); moreOpen=false" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="filter==='CareSetup' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🧷</span>Care</button>
+      <button @click="moreOpen=!moreOpen" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="moreOpen || ['GearSetup','LeisureSetup','MomSetup','TipsSetup'].includes(filter) ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🤍</span>More</button>
+    </nav>
+
+    <!-- Mobile More sheet -->
+    <div x-show="moreOpen" @click.self="moreOpen=false" class="fixed inset-0 z-40 bg-ink/30 backdrop-blur-sm md:hidden" x-transition.opacity>
+      <div class="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 pb-8 shadow-2xl" @click.away="moreOpen=false">
+        <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-200"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <button @click="goTo('GearSetup','gear-section'); moreOpen=false" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">🚼</span>Baby gear</button>
+          <button @click="goTo('LeisureSetup','leisure-section'); moreOpen=false" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">🧸</span>Leisure</button>
+          <button @click="goTo('MomSetup','mom-section'); moreOpen=false" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">🤱</span>Mom</button>
+          <button @click="goTo('TipsSetup','tips-section'); moreOpen=false" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">💡</span>Tips</button>
+        </div>
+        <div class="mt-3 flex items-center justify-between rounded-2xl border border-stone-100 px-4 py-3 text-sm">
+          <span class="flex items-center gap-2 text-stone-500"><span class="flex h-7 w-7 items-center justify-center rounded-full bg-blush-100 text-[11px] font-bold text-blush-700">{{ username[0]|upper }}</span>{{ username }}</span>
+          <span class="flex items-center gap-3 text-xs">
+            <a href="/settings" class="font-medium text-blush-700">Baby details</a>
+            <span class="text-stone-300">·</span>
+            <form method="post" action="/logout"><button class="text-stone-500">Log out</button></form>
+          </span>
+        </div>
+      </div>
+    </div>
+
     <main class="min-w-0 flex-1">
       <header class="sticky top-0 z-10 border-b border-blush-100 bg-page/90 px-5 py-4 backdrop-blur md:px-8">
         <div class="mx-auto flex max-w-7xl items-center justify-between">
           <div>
-            <div class="text-xs font-medium uppercase tracking-[.18em] text-stone-400">Baby • {{ season_label }} arrival{% if days_to_due is not none %} · due in {{ days_to_due }} days{% endif %}</div>
+            <div class="text-xs font-medium uppercase tracking-[.18em] text-stone-400">{{ season_label }} arrival{% if days_to_due is not none %} · due in {{ days_to_due }} days{% endif %}</div>
             <h2 class="mt-1 text-xl font-semibold">The first wardrobe</h2>
           </div>
           <div class="flex items-center gap-2 rounded-full border border-blush-200 bg-white px-3 py-1.5 text-sm shadow-sm">
@@ -78,16 +114,16 @@
         </div>
       </header>
 
-      <div class="mx-auto max-w-7xl space-y-7 px-5 py-7 md:px-8">
+      <div class="mx-auto max-w-7xl space-y-7 px-5 py-7 pb-28 md:px-8 md:pb-7">
         <section class="grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
           <div class="overflow-hidden rounded-3xl border border-blush-100 bg-white p-6 shadow-soft md:p-8">
             <div class="max-w-2xl">
               <div class="mb-3 inline-flex rounded-full bg-blush-50 px-3 py-1 text-xs font-medium text-blush-700">{{ season_label|upper }} CAPSULE</div>
               {% if arrived %}
-              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is here 🎉</h3>
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl"><span class="text-blush-600">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %}</span> is here 🎉</h3>
               <p class="mt-4 text-lg leading-8 text-stone-500">Everything is ready — enjoy the first days together.</p>
               {% else %}
-              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %} is almost here {{ season_emoji }}</h3>
+              <h3 class="text-3xl font-semibold tracking-tight md:text-4xl"><span class="text-blush-600">{% if baby_name %}{{ baby_name }}{% else %}Your little one{% endif %}</span> is almost here {{ season_emoji }}</h3>
               <p class="mt-4 text-lg leading-8 text-stone-500">Let's plan gently, one category at a time.</p>
               {% endif %}
               <div class="mt-6 flex flex-wrap gap-2 text-xs text-stone-600">
@@ -96,41 +132,56 @@
               </div>
             </div>
           </div>
-          <div class="rounded-3xl bg-blush-500 p-6 text-white shadow-soft">
+          <div class="mx-auto flex aspect-square w-full max-w-[21rem] flex-col items-center justify-center rounded-full bg-blush-500 px-9 text-center text-white shadow-soft md:mx-0 md:block md:aspect-auto md:max-w-none md:rounded-3xl md:p-6">
             <div class="text-sm font-medium text-white/80">Baby now</div>
             {% if baby_now %}
-            <div class="mt-4 flex items-center justify-center rounded-2xl bg-white/15 py-8 text-6xl">{{ baby_now.emoji }}</div>
-            <div class="mt-4 text-xl font-semibold leading-snug">{{ baby_now.title }}</div>
-            <p class="mt-2 text-sm leading-6 text-white/85">{{ baby_now.text }}</p>
-            <div class="mt-5 border-t border-white/20 pt-4 text-xs text-white/80">{{ baby_now.footer }}</div>
+            <div class="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-full bg-white/15 text-6xl md:mt-4 md:h-32 md:w-32">{{ baby_now.emoji }}</div>
+            <div class="mt-3 text-xl font-semibold leading-snug md:mt-4">{{ baby_now.title }}</div>
+            <p class="mt-1 text-sm leading-6 text-white/85 md:mt-2">{{ baby_now.text }}</p>
+            <div class="mt-4 text-xs text-white/80 md:mt-5 md:border-t md:border-white/20 md:pt-4">{{ baby_now.footer }}</div>
             {% else %}
-            <div class="mt-4 flex items-center justify-center rounded-2xl bg-white/15 py-8 text-6xl">🌸</div>
-            <div class="mt-4 text-xl font-semibold leading-snug">Your little one is on the way</div>
-            <p class="mt-2 text-sm leading-6 text-white/85">Set a due date in Baby details to see how big they are right now.</p>
-            <div class="mt-5 border-t border-white/20 pt-4 text-xs"><a href="/settings" class="text-white/90 underline decoration-white/40 underline-offset-2 hover:decoration-white">Add due date →</a></div>
+            <div class="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-full bg-white/15 text-6xl md:mt-4 md:h-32 md:w-32">🌸</div>
+            <div class="mt-3 text-xl font-semibold leading-snug md:mt-4">Your little one is on the way</div>
+            <p class="mt-1 text-sm leading-6 text-white/85 md:mt-2">Set a due date in Baby details to see how big they are right now.</p>
+            <div class="mt-4 text-xs md:mt-5 md:border-t md:border-white/20 md:pt-4"><a href="/settings" class="text-white/90 underline decoration-white/40 underline-offset-2 hover:decoration-white">Add due date →</a></div>
             {% endif %}
           </div>
         </section>
 
         <section class="grid gap-4 md:grid-cols-2">
           <div class="card"><div class="label">Starter targets</div><div class="mt-1 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3"><div><div class="metric" x-text="wardrobeTargets"></div><div class="muted" x-text="sizeFilter==='All' ? 'clothing pieces · across sizes' : 'clothing pieces · size ' + sizeLabel(sizeFilter)"></div></div><div><div class="metric" x-text="sleepTargets"></div><div class="muted">sleep pieces</div></div><div><div class="metric" x-text="careTargets"></div><div class="muted">care pieces</div></div><div><div class="metric" x-text="gearTargets"></div><div class="muted">gear pieces</div></div><div><div class="metric" x-text="leisureTargets"></div><div class="muted">leisure pieces</div></div><div><div class="metric" x-text="momTargets"></div><div class="muted">mom pieces</div></div></div></div>
-          <div class="card"><div class="label">Sizes</div><div class="mt-2 flex flex-wrap items-center gap-2"><div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm"><template x-for="s in ['All','50','56','62']"><button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="sizeLabel(s)"></button></template></div><div class="flex rounded-xl border border-stone-200 bg-white p-1 text-xs shadow-sm"><template x-for="sys in ['EU','US']"><button @click="setSizeSystem(sys)" :class="sizeSystem===sys ? 'bg-stone-700 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-2 py-1 transition" x-text="sys"></button></template></div></div><div class="muted" x-text="sizesCardHint"></div></div>
+          <div class="card"><div class="label">Sizes</div><div class="mt-2 flex flex-wrap items-center gap-2"><div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap"><template x-for="s in ['All','50','56','62']"><button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="sizeLabel(s)"></button></template></div><div class="flex rounded-xl border border-stone-200 bg-white p-1 text-xs shadow-sm"><template x-for="sys in ['EU','US']"><button @click="setSizeSystem(sys)" :class="sizeSystem===sys ? 'bg-stone-700 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-2 py-1 transition" x-text="sys"></button></template></div></div><div class="muted" x-text="sizesCardHint"></div></div>
         </section>
 
         {% macro item_card(item, visible='') %}
             <div {% if visible %}x-show="{{ visible }}"{% endif %} class="rounded-2xl border border-blush-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
               <div class="flex items-start justify-between gap-3">
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blush-50 text-2xl">{{ item.icon }}</div>
+                {% if item.group == 'Essentials' or item.group == 'Optional' %}
+                <button @click="toggleEssential('{{ item.id }}')" title="Tap to switch between essential and optional for you" class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500 transition hover:bg-blush-50 hover:text-blush-700" x-text="groupFor('{{ item.id }}') === 'Essentials' ? 'Essential ⇄' : 'Optional ⇄'"></button>
+                {% else %}
                 <span class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500">{{ item.type }}</span>
+                {% endif %}
               </div>
               <div class="mt-4 font-semibold">{{ item.name }}</div>
-              <div class="relative mt-1">
-                <input type="text" :value="brandFor('{{ item.id }}')" @focus="openBrandMenu('{{ item.id }}')" @click="openBrandMenu('{{ item.id }}')" @input="brandQuery=$event.target.value; brandMenu='{{ item.id }}'" @change="setItemBrand('{{ item.id }}', $event.target.value); brandMenu=null" @blur="brandMenu=null" @keydown.escape="brandMenu=null" placeholder="Brand" class="w-full rounded-lg border border-transparent bg-blush-50/60 px-2 py-1 text-xs text-blush-700 outline-none transition placeholder:text-stone-300 focus:border-blush-300 focus:bg-white">
-                <div x-show="brandMenu==='{{ item.id }}'" x-transition.opacity.duration.100ms class="brand-scroll absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-blush-200 bg-white py-1 shadow-lg shadow-blush-700/10">
-                  <template x-for="b in filteredBrandOptions('{{ item.id }}')" :key="b">
-                    <button type="button" @mousedown.prevent="chooseBrand('{{ item.id }}', b)" class="block w-full px-3 py-1.5 text-left text-xs text-stone-600 transition hover:bg-blush-50 hover:pl-3.5 hover:text-blush-700" x-text="b"></button>
+              <div class="mt-1">
+                <div class="flex flex-wrap items-center gap-1.5">
+                  <template x-for="b in brandsFor('{{ item.id }}')" :key="b">
+                    <span class="inline-flex items-center gap-1 rounded-full border border-blush-200 bg-blush-50 px-2 py-0.5 text-[11px] font-medium text-blush-700">
+                      <span x-text="b"></span>
+                      <button @click="removeBrand('{{ item.id }}', b)" class="text-blush-400 transition hover:text-rose-500">✕</button>
+                    </span>
                   </template>
-                  <div x-show="filteredBrandOptions('{{ item.id }}').length===0" class="px-3 py-2 text-xs italic text-stone-400">Nothing matched — your own brand is kept as typed</div>
+                  <button x-show="brandEdit!=='{{ item.id }}'" @click="openBrandEdit('{{ item.id }}')" class="rounded-full border border-dashed border-blush-300 px-2 py-0.5 text-[11px] font-medium text-blush-600 transition hover:border-blush-500 hover:text-blush-700">+ brand</button>
+                </div>
+                <div x-show="brandEdit==='{{ item.id }}'" class="relative mt-1">
+                  <input type="text" x-model="brandQuery" @focus="brandMenu='{{ item.id }}'" @input="brandMenu='{{ item.id }}'" @keydown.enter.prevent="commitBrandInput('{{ item.id }}')" @blur="brandEdit=null; brandMenu=null" @keydown.escape="brandEdit=null; brandMenu=null" placeholder="Type or pick a brand" class="w-full rounded-lg border border-blush-200 bg-white px-2 py-1 text-xs text-blush-700 outline-none transition focus:border-blush-300">
+                  <div x-show="brandMenu==='{{ item.id }}'" x-transition.opacity.duration.100ms class="brand-scroll absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-blush-200 bg-white py-1 shadow-lg shadow-blush-700/10">
+                    <template x-for="b in filteredBrandOptions('{{ item.id }}')" :key="b">
+                      <button type="button" @mousedown.prevent="chooseBrand('{{ item.id }}', b)" class="block w-full px-3 py-1.5 text-left text-xs text-stone-600 transition hover:bg-blush-50 hover:pl-3.5 hover:text-blush-700" x-text="b"></button>
+                    </template>
+                    <div x-show="filteredBrandOptions('{{ item.id }}').length===0" class="px-3 py-2 text-xs italic text-stone-400">No match — press Enter to keep what you typed</div>
+                  </div>
                 </div>
               </div>
               <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
@@ -144,10 +195,18 @@
                 <button @click="saveLink('{{ item.id }}')" class="rounded-lg bg-blush-500 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Save</button>
               </div>
               {% if item.preferred_colors %}
-              <div class="mt-2 flex flex-wrap gap-2">
-                {% for c in item.preferred_colors %}
-                <span class="text-[11px] rounded-full border px-2 py-0.5 bg-stone-50 text-stone-600">{{ c }}</span>
-                {% endfor %}
+              <div class="mt-2 flex flex-wrap items-center gap-1.5">
+                <template x-for="c in colorsFor('{{ item.id }}')" :key="c">
+                  <span class="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600">
+                    <span x-text="c"></span>
+                    <button @click="removeColor('{{ item.id }}', c)" class="text-stone-300 transition hover:text-rose-500">✕</button>
+                  </span>
+                </template>
+                <button x-show="colorEdit!=='{{ item.id }}'" @click="toggleColorInput('{{ item.id }}')" class="rounded-full border border-dashed border-stone-300 px-2 py-0.5 text-[11px] text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ color</button>
+                <span x-show="colorEdit==='{{ item.id }}'" class="inline-flex items-center gap-1">
+                  <input type="text" x-model="colorDraft" @keydown.enter="addColor('{{ item.id }}')" placeholder="color…" class="w-24 rounded-full border border-blush-200 px-2 py-0.5 text-[11px] outline-none">
+                  <button @click="addColor('{{ item.id }}')" class="text-[11px] font-medium text-blush-600">add</button>
+                </span>
               </div>
               {% endif %}
               <p class="mt-2 min-h-10 text-xs leading-5 text-stone-500">{{ item.note }}</p>
@@ -183,7 +242,7 @@
                 <span class="text-xs font-medium text-stone-500" x-text="sizeFilter==='All' ? 'pieces · across sizes' : 'pieces · size ' + sizeLabel(sizeFilter)"></span>
               </div>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Base','Sleep','Day','Layer','Cute','Accessory','Outdoor']">
                 <button @click="filter=tab" :class="filter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -192,18 +251,24 @@
 
           <div class="mb-4 flex flex-wrap items-center gap-3">
             <span class="text-[11px] font-bold uppercase tracking-[.14em] text-blush-500">Size</span>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="s in ['All','50','56','62']">
                 <button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="s==='All' ? 'All sizes' : sizeLabel(s)"></button>
               </template>
             </div>
-            <span class="text-xs text-stone-400" x-text="sizeHint"></span>
+            <span x-show="sizeFilter==='50'" class="text-xs text-stone-400" x-text="sizeHint"></span>
           </div>
 
             <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {% for item in wardrobe %}
             {{ item_card(item, "visibleForFilter('" ~ item.type ~ "') && inSize('" ~ item.id ~ "')") }}
             {% endfor %}
+          </div>
+          <div x-show="sizeFilter!=='All' && hiddenInSize().length" class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-stone-400">
+            <span>Not made in size <span class="font-semibold text-stone-500" x-text="sizeLabel(sizeFilter)"></span>:</span>
+            <template x-for="it in hiddenInSize()" :key="it.id">
+              <span class="rounded-full bg-stone-50 px-2 py-0.5" x-text="it.name + ' · from ' + sizeLabel(it.sizes[0])"></span>
+            </template>
           </div>
         </section>
 
@@ -255,7 +320,7 @@
             </div>
             <p class="mt-2 text-sm text-stone-500">What your baby wears for sleep, plus the safe-sleep setup around it.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Essentials','Optional']">
                 <button @click="sleepFilter=tab" :class="sleepFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -263,7 +328,7 @@
           </div>
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {% for item in sleep %}
-            {{ item_card(item, "sleepFilter === 'All' || sleepFilter === '" ~ item.group ~ "'") }}
+            {{ item_card(item, "sleepFilter === 'All' || sleepFilter === groupFor('" ~ item.id ~ "')") }}
             {% endfor %}
           </div>
         </section>
@@ -280,7 +345,7 @@
               </div>
               <p class="mt-2 text-sm text-stone-500">The everyday kit for changes, baths, and little health checks.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Diapering','Bath','Care']">
                 <button @click="careFilter=tab" :class="careFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -341,7 +406,7 @@
               </div>
               <p class="mt-2 text-sm text-stone-500">Nursing essentials and postpartum care for the weeks around the birth.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Nursing','Health & care']">
                 <button @click="momFilter=tab" :class="momFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -361,7 +426,7 @@
               <h3 class="section-title">Little things that help</h3>
               <p class="mt-2 text-sm text-stone-500">Short, practical wisdom — collected from experienced parents and official guidance.</p>
             </div>
-            <div class="flex rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm">
+            <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
               <template x-for="tab in ['All','Clothing','Sleep']">
                 <button @click="tipsFilter=tab" :class="tipsFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
               </template>
@@ -453,12 +518,20 @@
       for (const [cat, items] of Object.entries(itemsByCategory)) {
         for (const it of items) categoryOf[it.id] = cat;
       }
+      // Older state stored one brand string per item; multi-brand chips use arrays.
+      function normalizeBrands(b){
+        const items = {};
+        for(const [k,v] of Object.entries((b&&b.items)||{})){
+          items[k] = Array.isArray(v) ? v : (v ? [v] : []);
+        }
+        return {...b, items};
+      }
       // counts are per size: {itemId: {size: owned}}; sleep gear uses "_".
       // New accounts start with everything at zero — owned items are added
       // per account on the server.
       const counts={};
       return {
-        filter:'All', sleepFilter:'All', careFilter:'All', momFilter:'All', tipsFilter:'All', sizeFilter:'All', sizeSystem:'EU', selectedOutfit:0, customOpen:false,
+        filter:'All', sleepFilter:'All', careFilter:'All', momFilter:'All', tipsFilter:'All', sizeFilter:'All', sizeSystem:'EU', selectedOutfit:0, customOpen:false, moreOpen:false,
         counts,
         async hydrate(){
           // Load this account's state from the server. On the very first load
@@ -486,7 +559,10 @@
               const links=JSON.parse(localStorage.getItem('babyItemLinks')||'null');
               if(links){ this.userLinks=links; s.links=links; }
               const brands=JSON.parse(localStorage.getItem('babyBrands')||'null');
-              if(brands){ this.brands=brands; s.brands=brands; }
+              if(brands){
+                this.brands=normalizeBrands(brands);
+                s.brands=this.brands;
+              }
               const sys=localStorage.getItem('sizeSystem');
               if(sys){ this.sizeSystem=sys; s.sizeSystem=sys; }
               const th=localStorage.getItem('babyTheme');
@@ -496,7 +572,9 @@
             } else {
               if(s.counts) this.counts=s.counts;
               if(s.links) this.userLinks=s.links;
-              if(s.brands) this.brands=s.brands;
+              if(s.brands) this.brands=normalizeBrands(s.brands);
+              if(s.colors) this.colors=s.colors;
+              if(s.essentials) this.essentials=s.essentials;
               if(s.sizeSystem) this.sizeSystem=s.sizeSystem;
               if(s.theme && s.theme!==document.documentElement.dataset.theme){
                 document.documentElement.dataset.theme=s.theme;
@@ -517,6 +595,8 @@
                 counts:this.counts,
                 links:this.userLinks,
                 brands:this.brands,
+                colors:this.colors,
+                essentials:this.essentials,
                 sizeSystem:this.sizeSystem,
                 theme: document.documentElement.dataset.theme || 'peach',
               }),
@@ -535,6 +615,9 @@
         mom: momData,
         userLinks:{},
         linkEdit:null, linkDraft:'',
+        essentials:{},
+        colors:{},
+        colorEdit:null, colorDraft:'',
         brandTiers: {{ brand_tiers|tojson }},
         categoryBrands: {{ category_brands|tojson }},
         brands: {picked:{quality:[],value:[]}, custom:{quality:[],value:[]}, items:{}},
@@ -555,15 +638,41 @@
           this.saveBrands();
         },
         saveBrands(){ this.save() },
-        brandFor(id){ return this.brands.items[id] ?? ((this.itemById(id)||{}).brand ?? ''); },
-        setItemBrand(id,v){ this.brands.items={...this.brands.items, [id]:v}; this.saveBrands(); },
-        brandMenu:null, brandQuery:'',
-        openBrandMenu(id){ this.brandMenu=id; this.brandQuery=''; },
+        brandsFor(id){
+          const v=this.brands.items[id];
+          if(Array.isArray(v)) return v;
+          if(typeof v==='string' && v) return [v];
+          const d=(this.itemById(id)||{}).brand;
+          return d ? [d] : [];
+        },
+        addBrand(id,b){
+          if(b && !this.brandsFor(id).includes(b)){
+            this.brands.items={...this.brands.items, [id]:this.brandsFor(id).concat(b)};
+            this.save();
+          }
+        },
+        removeBrand(id,b){
+          this.brands.items={...this.brands.items, [id]:this.brandsFor(id).filter(x=>x!==b)};
+          this.save();
+        },
+        brandMenu:null, brandQuery:'', brandEdit:null,
+        openBrandEdit(id){ this.brandEdit=id; this.brandQuery=''; this.brandMenu=id; },
         filteredBrandOptions(id){
           const q=(this.brandQuery||'').trim().toLowerCase();
           return this.brandOptionsFor(id).filter(b => !q || b.toLowerCase().includes(q));
         },
-        chooseBrand(id,b){ this.setItemBrand(id,b); this.brandMenu=null; },
+        chooseBrand(id,b){
+          this.addBrand(id,b);
+          this.brandEdit=null; this.brandMenu=null; this.brandQuery='';
+        },
+        commitBrandInput(id){
+          const v=(this.brandQuery||'').trim();
+          if(v){
+            const match=this.brandOptionsFor(id).find(o=>o.toLowerCase()===v.toLowerCase());
+            this.addBrand(id, match||v);
+          }
+          this.brandEdit=null; this.brandMenu=null; this.brandQuery='';
+        },
         brandOptionsFor(id){
           const cat = categoryOf[id] || 'clothing';
           const pool = new Set();
@@ -573,8 +682,7 @@
             for(const b of (this.categoryBrands[cat]||[])) pool.add(b);
           }
           for(const it of (itemsByCategory[cat]||[])){
-            const b = this.brands.items[it.id] ?? it.brand;
-            if(b) pool.add(b);
+            for(const b of this.brandsFor(it.id)) pool.add(b);
           }
           return [...pool].sort();
         },
@@ -593,10 +701,40 @@
           this.save();
         },
         itemById(id){ return allItems.find(i=>i.id===id) },
+        groupFor(id){
+          const it=this.itemById(id);
+          if(!it) return '';
+          if(it.group==='Essentials' || it.group==='Optional'){
+            return this.essentials[id] || it.group;
+          }
+          return it.group;
+        },
+        toggleEssential(id){
+          this.essentials={...this.essentials, [id]: this.groupFor(id)==='Essentials' ? 'Optional' : 'Essentials'};
+          this.save();
+        },
+        colorsFor(id){ return this.colors[id] ?? ((this.itemById(id)||{}).preferred_colors ?? []) },
+        toggleColorInput(id){ this.colorEdit = this.colorEdit===id ? null : id; this.colorDraft=''; },
+        addColor(id){
+          const v=(this.colorDraft||'').trim();
+          if(v && !this.colorsFor(id).includes(v)){
+            this.colors={...this.colors, [id]:this.colorsFor(id).concat(v)};
+            this.save();
+          }
+          this.colorDraft=''; this.colorEdit=null;
+        },
+        removeColor(id,c){
+          this.colors={...this.colors, [id]:this.colorsFor(id).filter(x=>x!==c)};
+          this.save();
+        },
         inSize(id){
           if(this.sizeFilter==='All') return true;
           const it=this.itemById(id);
           return !!(it && it.sizes && it.sizes.includes(this.sizeFilter));
+        },
+        hiddenInSize(){
+          if(this.sizeFilter==='All') return [];
+          return this.wardrobe.filter(it => !(it.sizes||[]).includes(this.sizeFilter));
         },
         cardTarget(id){
           const it=this.itemById(id);
@@ -612,16 +750,7 @@
         },
         ownedTotal(id){ return Object.values(this.counts[id]||{}).reduce((a,b)=>a+b,0) },
         barPct(id){ const t=this.cardTarget(id); return t ? Math.min(100, this.countFor(id)/t*100) : 0 },
-        get sizeHint(){
-          if(this.sizeFilter==='All') return this.sizeSystem==='US'
-            ? 'US sizes are by age — NB ≈ EU 50 · 0–3M ≈ 56 · 3–6M ≈ 62.'
-            : 'EU sizes are the maximum height in cm.';
-          return {
-            '50':'≈ birth–6 weeks — buy little; babies move through it fast.',
-            '56':'≈ 1–3 months — the main working wardrobe.',
-            '62':'≈ 3–6 months — usually gets the most wear.',
-          }[this.sizeFilter] || '';
-        },
+        get sizeHint(){ return '≈ birth to 6 weeks. Buy little, they outgrow it fast.' },
         get sizesCardHint(){
           return this.sizeSystem==='US'
             ? 'US sizes are by age: NB (newborn) · 0–3M · 3–6M. Click a size to plan it.'
@@ -655,7 +784,18 @@
         },
         getIdForLayer(layer){
           const name = String(layer).toLowerCase().trim();
-          for(const item of this.wardrobe.concat(this.sleep, this.care, this.gear, this.leisure, this.mom)){
+          // "Day outfit" means the Everyday soft recipe (body + romper + socks);
+          // its availability is the scarcest of the three.
+          if(name === 'day outfit'){
+            const ids = ['Long-sleeve bodysuit','Romper','Socks / booties']
+              .map(l => this.exactId(String(l).toLowerCase()));
+            if(ids.some(id => !id)) return null;
+            return ids.sort((a,b) => this.ownedTotal(a) - this.ownedTotal(b))[0];
+          }
+          return this.exactId(name);
+        },
+        exactId(name){
+          for(const item of allItems){
             const iname = String(item.name).toLowerCase();
             if(iname === name) return item.id;
             if(iname.includes(name) || name.includes(iname)) return item.id;
@@ -693,6 +833,9 @@
           return n ? Math.round(sum/n*100) : 0;
         }
       }
+    }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('/static/sw.js').catch(() => {}));
     }
   </script>
 </body>

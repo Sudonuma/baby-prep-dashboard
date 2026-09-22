@@ -31,6 +31,7 @@ assert {"swaddle", "sleevesack", "crib", "bassinet", "cribmattress", "cribsheets
 for expected in ("Crib", "Bassinet or bedside sleeper", "Crib mattress", "Crib sheets", "Baby monitor"):
     assert expected in html, f"sleep item missing from rendered page: {expected}"
 assert "sleepFilter" in html, "sleep sub-filter tabs missing"
+assert "toggleEssential" in html, "essential/optional toggle missing"
 
 # Care section: diapering, bath and care groups with their tabs.
 for expected in ("Changing pad", "Diaper bag", "Bathtub", "Bath thermometer",
@@ -61,7 +62,7 @@ assert "momFilter" in html, "mom sub-filter tabs missing"
 
 # Multi-user personalization renders with defaults.
 assert "WINTER CAPSULE" in html, "season capsule chip missing"
-assert "Baby • Winter arrival" in html, "season header missing"
+assert "Winter arrival" in html and "Baby •" not in html, "season header wrong"
 assert "Your little one" in html and "is almost here" in html, "hero headline missing"
 assert "Let's plan gently" in html, "hero subline missing"
 assert "no overspending" in html and "no panic-lists" in html, "hero chips missing"
