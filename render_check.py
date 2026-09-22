@@ -31,6 +31,7 @@ assert {"swaddle", "sleevesack", "crib", "bassinet", "cribmattress", "cribsheets
 for expected in ("Crib", "Bassinet or bedside sleeper", "Crib mattress", "Crib sheets", "Baby monitor"):
     assert expected in html, f"sleep item missing from rendered page: {expected}"
 assert "sleepFilter" in html, "sleep sub-filter tabs missing"
+assert "toggleEssential" in html, "essential/optional toggle missing"
 
 # Care section: diapering, bath and care groups with their tabs.
 for expected in ("Changing pad", "Diaper bag", "Bathtub", "Bath thermometer",

@@ -157,7 +157,11 @@
             <div {% if visible %}x-show="{{ visible }}"{% endif %} class="rounded-2xl border border-blush-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
               <div class="flex items-start justify-between gap-3">
                 <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blush-50 text-2xl">{{ item.icon }}</div>
+                {% if item.group == 'Essentials' or item.group == 'Optional' %}
+                <button @click="toggleEssential('{{ item.id }}')" title="Tap to switch between essential and optional for you" class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500 transition hover:bg-blush-50 hover:text-blush-700" x-text="groupFor('{{ item.id }}') === 'Essentials' ? 'Essential ⇄' : 'Optional ⇄'"></button>
+                {% else %}
                 <span class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500">{{ item.type }}</span>
+                {% endif %}
               </div>
               <div class="mt-4 font-semibold">{{ item.name }}</div>
               <div class="mt-1">
@@ -318,7 +322,7 @@
           </div>
           <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {% for item in sleep %}
-            {{ item_card(item, "sleepFilter === 'All' || sleepFilter === '" ~ item.group ~ "'") }}
+            {{ item_card(item, "sleepFilter === 'All' || sleepFilter === groupFor('" ~ item.id ~ "')") }}
             {% endfor %}
           </div>
         </section>
@@ -564,6 +568,7 @@
               if(s.links) this.userLinks=s.links;
               if(s.brands) this.brands=normalizeBrands(s.brands);
               if(s.colors) this.colors=s.colors;
+              if(s.essentials) this.essentials=s.essentials;
               if(s.sizeSystem) this.sizeSystem=s.sizeSystem;
               if(s.theme && s.theme!==document.documentElement.dataset.theme){
                 document.documentElement.dataset.theme=s.theme;
@@ -585,6 +590,7 @@
                 links:this.userLinks,
                 brands:this.brands,
                 colors:this.colors,
+                essentials:this.essentials,
                 sizeSystem:this.sizeSystem,
                 theme: document.documentElement.dataset.theme || 'peach',
               }),
@@ -603,6 +609,7 @@
         mom: momData,
         userLinks:{},
         linkEdit:null, linkDraft:'',
+        essentials:{},
         colors:{},
         colorEdit:null, colorDraft:'',
         brandTiers: {{ brand_tiers|tojson }},
@@ -688,6 +695,18 @@
           this.save();
         },
         itemById(id){ return allItems.find(i=>i.id===id) },
+        groupFor(id){
+          const it=this.itemById(id);
+          if(!it) return '';
+          if(it.group==='Essentials' || it.group==='Optional'){
+            return this.essentials[id] || it.group;
+          }
+          return it.group;
+        },
+        toggleEssential(id){
+          this.essentials={...this.essentials, [id]: this.groupFor(id)==='Essentials' ? 'Optional' : 'Essentials'};
+          this.save();
+        },
         colorsFor(id){ return this.colors[id] ?? ((this.itemById(id)||{}).preferred_colors ?? []) },
         toggleColorInput(id){ this.colorEdit = this.colorEdit===id ? null : id; this.colorDraft=''; },
         addColor(id){
