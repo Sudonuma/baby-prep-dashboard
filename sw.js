@@ -24,8 +24,9 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   const url = new URL(event.request.url);
   if (event.request.method !== "GET" || url.origin !== self.location.origin) return;
-  if (url.pathname.startsWith("/static/")) {
-    // cache-first for the shell
+  if (url.pathname.startsWith("/static/") && !url.pathname.includes("app-data.js")) {
+    // cache-first for the shell; app-data.js goes network-first (below) so
+    // item updates arrive without needing a cache-version bump
     event.respondWith(
       caches.match(event.request).then((hit) => hit || fetch(event.request).then((resp) => {
         const copy = resp.clone();
