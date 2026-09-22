@@ -1,61 +1,52 @@
-# Baby Winter Wardrobe Dashboard
+# Baby Prep — local-first dashboard
 
-A small FastAPI + Jinja2 + Tailwind + Alpine.js MVP for planning a winter newborn wardrobe.
+A calm, visual planner for everything the baby needs — without overspending.
+**No accounts, no server, no tracking: everything stays on your device.**
 
-## Run
+Static app (HTML + Alpine.js + Tailwind): item data lives in `static/app-data.js`,
+your progress, links, brands, colors, theme and baby details live in this
+browser's storage, and a backup file can be downloaded anytime.
+
+The account-based multi-user version is preserved on the `main` branch.
+
+## Run locally
 
 ```bash
-conda create -n baby-dashboard python=3.12 -y
-conda activate baby-dashboard
-pip install -r requirements.txt
-uvicorn app:app --reload
+python serve.py
 ```
 
-Open http://127.0.0.1:8000
+Open http://localhost:8123 (or http://<your-ip>:8123 from a phone on the same Wi-Fi).
+Any static file server works; there is nothing to install.
 
-## Try it on your phone (same Wi-Fi)
+## Data
 
-Start the server for the network (`--host 0.0.0.0`), find your machine's IP (`hostname -I`), then on the phone open `http://<IP>:8123`. In Safari: Share → **Add to Home Screen** for the app icon.
-
-## Deploying (install from anywhere)
-
-`render.yaml` is a Render blueprint: push the repo to GitHub, create a "Blueprint" service on render.com, and it deploys with a persistent disk for the SQLite database (accounts + dashboards survive restarts; the small paid instance is required for the disk). Any HTTPS host works too — the PWA (manifest, icons, service worker) is already set up, so once deployed, iPhone users install via Safari → Share → Add to Home Screen.
-
-## Accounts & personalization
-
-- Register at `/register` (or log in at `/login`). Accounts and profiles live in a local SQLite database at `data/app.db` — auto-created on first start, gitignored.
-- After signing up you're asked for your baby's name and due date (both optional). The dashboard personalizes from these: the baby name appears in the overview, and the due date sets the arrival season ("Winter arrival", the season capsule chip) plus a due-day countdown.
-- Item quantities, links, brand picks, size system and theme live in the database **per account** — new accounts start fresh, and your dashboard follows your login across devices (saved with a short debounce as you click).
+- Edit items/brands/tips in `static/app-data.js` (`window.APP_DATA = {...}`), then
+  validate with `python check_data.py`.
+- All user state is in `localStorage` under `babyPrepState`. "Baby details →
+  Download backup" exports it as JSON; "Restore from file" imports it (e.g. when
+  switching phones or clearing the browser).
 
 ## What is interactive
 
-- Filter clothing by role (base, sleep, day, layer, cute, accessory, outdoor)
-- Size selector (All / 50 / 56 / 62): each clothing item carries per-size target quantities, per-size owned counters, and per-size progress. EU sizes are the baby's max height in cm (50 ≈ 0–1 mo, 56 ≈ 1–3 mo, 62 ≈ 3–6 mo)
-- EU/US size label toggle (NB / 0–3M / 3–6M); data and saved counts always stay on the canonical EU sizes
-- Dedicated sleep section with All / Essentials / Optional tabs; essentials covers sleepwear (swaddle, sleepsack) and the sleep setup, each item with its own counter
-- Diapering & bath & care section with All / Diapering / Bath / Care tabs, each item with its own counter
-- Baby gear section for the big-ticket basics (stroller, car seat, carrier, bouncer, playard, swing)
-- Leisure section for awake time (activity gym, books, plush toys, toys)
-- Mom section with All / Nursing / Health & care tabs — nursing essentials and postpartum care
-- Tips & tricks section with All / Clothing / Sleep tabs — practical advice cards with sources
-- "Baby now" card: gestational-week size comparison with a growing-flower countdown, computed from the due date
-- Increment/decrement owned quantities (clothing counters adjust the selected size)
-- Progress toward the starter capsule for the selected size
-- Click outfit recipes to see the layer stack
-- Add, edit or remove a product link on any item (saved in this browser) — park things you plan to buy when they go on sale; a data-provided link acts as the default
-- Interactive shopping strategy: curated brand pools (high-quality basics / cute outfits for a good price) — pick brands, add your own, and set or change the brand on any item card (all saved in this browser). Clothing cards suggest from the strategy pools; sleep, care, gear and leisure cards each have their own brand suggestions
-- Quantities persist in browser localStorage
+- Overview: season capsule, "Baby now" size card and countdown (from the due date),
+  per-category progress cards, outfit recipes, brand strategy, tips
+- Categories: Baby clothing (role + size filters, per-size targets and counters),
+  Sleep (Essentials/Optional tabs — tap a badge to re-classify for yourself),
+  Diapering & bath & care, Baby gear, Leisure, Mom, Tips & tricks
+- Every item: multiple brand chips, color chips, a product link, owned counters
+- Themes: peach (default), dusty blue, dusty burgundy, soft prune — in Baby details
+- EU ↔ US size labels (50/56/62 ↔ NB/0–3M/3–6M)
 
-## Design direction
+## Deploying (GitHub Pages)
 
-Soft dusty-peach pink, warm off-white, dark brown text, rounded cards, minimal dashboard density.
-
-## Roadmap
-
-Planned next steps live in [ROADMAP.md](ROADMAP.md): due-date-driven wardrobe suggestions, an EU/US size toggle, weather-based dressing guidance, price/sale watching, brand and strategy options, and a paperwork tracker.
+Push this branch to GitHub, then in the repo: Settings → Pages → deploy from the
+branch. The manifest and service worker use relative paths, so the project
+subpath (`user.github.io/repo/`) works. The app is a PWA: on iPhone, open in
+Safari → Share → Add to Home Screen.
 
 ## Planning notes
 
-The dashboard deliberately separates daytime layering from sleep. The winter layer guidance follows NHS advice to use roughly one extra layer in winter, while keeping sleep clothing simple to avoid overheating. Sanetta's current size guide uses 50/56/62/68/74/80 with 50 listed at 0 months, 56 at 1 month and 62 at 3 months.
-
-The starter numbers are editable planning defaults rather than a prescriptive shopping list. Per-size guidance follows the common recommendation to keep size 50 small (the stage lasts only a few weeks and babies may skip it) and carry the working wardrobe in 56/62, with enough pieces for roughly a week between laundry loads.
+The wardrobe deliberately separates daytime layering from sleep. The winter layer
+guidance follows NHS advice to use roughly one extra layer in winter, while
+keeping sleep clothing simple to avoid overheating. Per-size guidance keeps size
+50 small (the stage lasts only weeks) and carries the working wardrobe in 56/62.

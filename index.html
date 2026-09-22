@@ -1,0 +1,914 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Baby Prep</title>
+  <script>document.documentElement.dataset.theme = localStorage.getItem('babyTheme') || 'peach';</script>
+  <link rel="stylesheet" href="./static/themes.css">
+  <link rel="manifest" href="./static/manifest.webmanifest">
+  <meta name="theme-color" content="#d78379">
+  <link rel="apple-touch-icon" href="./static/icons/icon-192.png">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Baby Prep">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <script src="./static/app-data.js"></script>
+  <script>
+    tailwind.config = {
+      theme: { extend: {
+        colors: {
+          blush: {
+            50:'rgb(var(--b50) / <alpha-value>)',
+            100:'rgb(var(--b100) / <alpha-value>)',
+            200:'rgb(var(--b200) / <alpha-value>)',
+            300:'rgb(var(--b300) / <alpha-value>)',
+            400:'rgb(var(--b400) / <alpha-value>)',
+            500:'rgb(var(--b500) / <alpha-value>)',
+            600:'rgb(var(--b600) / <alpha-value>)',
+            700:'rgb(var(--b700) / <alpha-value>)'
+          },
+          ink:'rgb(var(--ink) / <alpha-value>)',
+          page:'rgb(var(--page) / <alpha-value>)'
+        },
+        boxShadow: { soft:'0 10px 30px rgba(var(--shadow-rgb), .07)' }
+      }}
+    }
+  </script>
+</head>
+<body class="min-h-screen bg-page text-ink" x-data="app()" x-init="init()">
+  <div class="flex min-h-screen">
+    <aside class="hidden w-64 shrink-0 border-r border-blush-100 bg-white/80 px-5 py-6 md:sticky md:top-0 md:flex md:h-screen md:flex-col md:overflow-y-auto">
+      <div class="mb-8">
+        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blush-600"><span class="h-2 w-2 rounded-full bg-blush-400"></span> NEST / BABY PREP</div>
+        <h1 class="text-2xl font-semibold tracking-tight">Baby prep</h1>
+        <p class="mt-1 text-sm text-stone-500">A visual shopping planner.</p>
+      </div>
+      <nav class="space-y-1 text-sm">
+        <button :class="view==='overview' ? 'nav active' : 'nav'" @click="goOverview()">Overview</button>
+        <template x-for="cat in categories" :key="cat.id">
+          <button :class="view===cat.id ? 'nav active' : 'nav'" @click="goCategory(cat.id)" x-text="cat.label"></button>
+        </template>
+        <button class="nav opacity-50">Hospital bag</button>
+        <button class="nav opacity-50">Other</button>
+        <button class="nav opacity-50">Cost estimate</button>
+      </nav>
+      <div class="mt-auto rounded-2xl bg-blush-50 p-4 text-sm">
+        <div class="font-semibold">Your data, your phone</div>
+        <p class="mt-1 text-xs leading-5 text-stone-600">Nothing is uploaded anywhere. Everything stays in this app on your device.</p>
+        <div class="mt-3 flex items-center gap-3 text-xs">
+          <button @click="settingsOpen=true" class="font-medium text-blush-700 hover:text-blush-600">Baby details</button>
+          <span class="text-stone-300">·</span>
+          <button @click="exportData()" class="text-stone-500 transition hover:text-blush-600">Back up</button>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Mobile bottom navigation -->
+    <nav class="fixed inset-x-0 bottom-0 z-30 flex border-t border-blush-100 bg-white/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden">
+      <button @click="goOverview()" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="view==='overview' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🏡</span>Home</button>
+      <button @click="goCategory('clothing')" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="view==='clothing' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">👕</span>Clothing</button>
+      <button @click="goCategory('sleep')" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="view==='sleep' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🌙</span>Sleep</button>
+      <button @click="goCategory('care')" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="view==='care' ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🧷</span>Care</button>
+      <button @click="moreOpen=!moreOpen" class="flex flex-1 flex-col items-center gap-0.5 py-2.5 text-[10px] font-medium" :class="moreOpen || ['gear','leisure','mom','tips'].includes(view) ? 'text-blush-600' : 'text-stone-400'"><span class="text-lg">🤍</span>More</button>
+    </nav>
+
+    <!-- Mobile More sheet -->
+    <div x-show="moreOpen" @click.self="moreOpen=false" class="fixed inset-0 z-40 bg-ink/30 backdrop-blur-sm md:hidden" x-transition.opacity>
+      <div class="absolute inset-x-0 bottom-0 rounded-t-3xl bg-white p-5 pb-8 shadow-2xl">
+        <div class="mx-auto mb-4 h-1 w-10 rounded-full bg-stone-200"></div>
+        <div class="grid grid-cols-2 gap-3">
+          <button @click="goCategory('gear')" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">🚼</span>Baby gear</button>
+          <button @click="goCategory('leisure')" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">🧸</span>Leisure</button>
+          <button @click="goCategory('mom')" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">🤱</span>Mom</button>
+          <button @click="goCategory('tips')" class="flex items-center gap-3 rounded-2xl border border-blush-100 bg-blush-50/50 px-4 py-3 text-sm font-medium text-ink"><span class="text-xl">💡</span>Tips</button>
+        </div>
+        <div class="mt-3 flex items-center justify-between rounded-2xl border border-stone-100 px-4 py-3 text-sm">
+          <span class="text-stone-500">Settings &amp; backup</span>
+          <button @click="moreOpen=false; settingsOpen=true" class="text-xs font-medium text-blush-700">Open →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings modal -->
+    <div x-show="settingsOpen" @click.self="settingsOpen=false" class="fixed inset-0 z-50 flex items-center justify-center bg-ink/30 px-4 backdrop-blur-sm" x-transition.opacity>
+      <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-3xl border border-blush-100 bg-white p-8 shadow-soft">
+        <div class="mb-2 flex items-center gap-2 text-sm font-semibold text-blush-600"><span class="h-2 w-2 rounded-full bg-blush-400"></span> NEST / BABY PREP</div>
+        <h2 class="text-2xl font-semibold tracking-tight">Baby details</h2>
+        <p class="mt-1 text-sm text-stone-500">Saved on this device only.</p>
+        <div class="mt-6 space-y-4">
+          <div>
+            <label class="text-xs font-semibold text-stone-500">Baby name (optional)</label>
+            <input type="text" x-model="profileDraft.name" maxlength="40" placeholder="e.g. Ussua" class="mt-1 w-full rounded-xl border border-blush-200 bg-white px-3 py-2 text-sm outline-none transition focus:border-blush-400">
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-stone-500">Due date (optional)</label>
+            <input type="date" x-model="profileDraft.due" class="mt-1 w-full rounded-xl border border-blush-200 bg-white px-3 py-2 text-sm text-stone-600 outline-none transition focus:border-blush-400">
+            <p class="mt-1 text-xs text-stone-400">Sets the season capsule and the "Baby now" card.</p>
+          </div>
+          <div>
+            <label class="text-xs font-semibold text-stone-500">Theme</label>
+            <div class="mt-2 flex items-center gap-3">
+              <template x-for="t in themes" :key="t.id">
+                <button type="button" @click="setTheme(t.id)" :title="t.label" :class="state.theme===t.id ? 'ring-2 ring-blush-500 ring-offset-2' : 'hover:scale-110'" :style="`background:rgb(${t.rgb})`" class="h-6 w-6 rounded-full border border-black/5 transition"></button>
+              </template>
+              <span class="text-xs text-stone-400" x-text="themes.find(t=>t.id===state.theme)?.label"></span>
+            </div>
+          </div>
+          <div class="rounded-2xl border border-stone-100 p-4">
+            <div class="text-xs font-semibold text-stone-500">Backup</div>
+            <p class="mt-1 text-xs leading-5 text-stone-400">Your data lives only on this device. Download a backup file once in a while (or before switching phones) and keep it somewhere safe.</p>
+            <div class="mt-3 flex flex-wrap gap-2">
+              <button @click="exportData()" class="rounded-xl bg-blush-500 px-3 py-2 text-xs font-semibold text-white transition hover:bg-blush-600">Download backup</button>
+              <label class="cursor-pointer rounded-xl border border-blush-200 px-3 py-2 text-xs font-medium text-blush-700 transition hover:bg-blush-50">
+                Restore from file
+                <input type="file" accept="application/json" class="hidden" @change="importData($event)">
+              </label>
+            </div>
+          </div>
+        </div>
+        <div class="mt-6 flex gap-3">
+          <button @click="saveProfile()" class="flex-1 rounded-xl bg-blush-500 py-2.5 text-sm font-semibold text-white transition hover:bg-blush-600">Save</button>
+          <button @click="settingsOpen=false" class="rounded-xl border border-stone-200 px-4 py-2.5 text-sm text-stone-500 transition hover:bg-stone-50">Close</button>
+        </div>
+      </div>
+    </div>
+
+    <main class="min-w-0 flex-1">
+      <header class="sticky top-0 z-10 border-b border-blush-100 bg-page/90 px-5 py-4 backdrop-blur md:px-8">
+        <div class="mx-auto flex max-w-7xl items-center justify-between">
+          <div>
+            <div class="text-xs font-medium uppercase tracking-[.18em] text-stone-400"><span x-text="seasonLabel"></span> arrival<span x-show="daysToDue !== null" x-text="' · due in ' + daysToDue + ' days'"></span></div>
+            <h2 class="mt-1 text-xl font-semibold" x-text="view==='overview' ? 'The first wardrobe' : activeCategory.label"></h2>
+          </div>
+          <div class="flex items-center gap-2 rounded-full border border-blush-200 bg-white px-3 py-1.5 text-sm shadow-sm">
+            <span class="h-2 w-2 rounded-full bg-blush-400"></span>
+            <span x-text="progress + '% ready'"></span>
+          </div>
+        </div>
+      </header>
+
+      <div class="mx-auto max-w-7xl space-y-7 px-5 py-7 pb-28 md:px-8 md:pb-7">
+
+        <!-- ======================= OVERVIEW ======================= -->
+        <template x-if="view==='overview'">
+          <div class="space-y-7">
+            <section class="grid gap-4 lg:grid-cols-[1.35fr_.65fr]">
+              <div class="overflow-hidden rounded-3xl border border-blush-100 bg-white p-6 shadow-soft md:p-8">
+                <div class="max-w-2xl">
+                  <div class="mb-3 inline-flex rounded-full bg-blush-50 px-3 py-1 text-xs font-medium text-blush-700"><span x-text="seasonLabel.toUpperCase()"></span> CAPSULE</div>
+                  <h3 class="text-3xl font-semibold tracking-tight md:text-4xl">
+                    <span class="text-blush-600" x-text="babyDisplay"></span>
+                    <template x-if="!arrived"><span> is almost here <span x-text="seasonEmoji"></span></span></template>
+                    <template x-if="arrived"><span> is here 🎉</span></template>
+                  </h3>
+                  <p class="mt-4 text-lg leading-8 text-stone-500" x-text="arrived ? 'Everything is ready — enjoy the first days together.' : 'Let\'s plan gently, one category at a time.'"></p>
+                  <div class="mt-6 flex flex-wrap gap-2 text-xs text-stone-600">
+                    <span class="rounded-full bg-stone-100 px-3 py-1.5">✓ no overspending</span>
+                    <span class="rounded-full bg-stone-100 px-3 py-1.5">✓ no panic-lists</span>
+                  </div>
+                </div>
+              </div>
+              <div class="mx-auto flex aspect-square w-full max-w-[21rem] flex-col items-center justify-center rounded-full bg-blush-500 px-9 text-center text-white shadow-soft md:mx-0 md:block md:aspect-auto md:max-w-none md:rounded-3xl md:p-6">
+                <div class="text-sm font-medium text-white/80">Baby now</div>
+                <template x-if="babyNow">
+                  <div>
+                    <div class="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-full bg-white/15 text-6xl md:mt-4 md:h-32 md:w-32" x-text="babyNow.emoji"></div>
+                    <div class="mt-3 text-xl font-semibold leading-snug md:mt-4" x-text="babyNow.title"></div>
+                    <p class="mt-1 text-sm leading-6 text-white/85 md:mt-2" x-text="babyNow.text"></p>
+                    <div class="mt-4 text-xs text-white/80 md:mt-5 md:border-t md:border-white/20 md:pt-4" x-text="babyNow.footer"></div>
+                  </div>
+                </template>
+                <template x-if="!babyNow">
+                  <div>
+                    <div class="mx-auto mt-3 flex h-28 w-28 items-center justify-center rounded-full bg-white/15 text-6xl md:mt-4 md:h-32 md:w-32">🌸</div>
+                    <div class="mt-3 text-xl font-semibold leading-snug md:mt-4">Your little one is on the way</div>
+                    <p class="mt-1 text-sm leading-6 text-white/85 md:mt-2">Set a due date in Baby details to see how big they are right now.</p>
+                    <button @click="openSettings()" class="mt-4 text-xs underline decoration-white/40 underline-offset-2 md:mt-5 md:border-t md:border-white/20 md:pt-4">Add due date →</button>
+                  </div>
+                </template>
+              </div>
+            </section>
+
+            <section class="grid gap-4 md:grid-cols-2">
+              <div class="card">
+                <div class="label">Starter targets</div>
+                <div class="mt-1 grid grid-cols-2 gap-x-6 gap-y-3 sm:grid-cols-3">
+                  <div><div class="metric" x-text="targetsFor('clothing')"></div><div class="muted" x-text="sizeFilter==='All' ? 'clothing pieces · across sizes' : 'clothing pieces · size ' + sizeLabel(sizeFilter)"></div></div>
+                  <div><div class="metric" x-text="targetsFor('sleep')"></div><div class="muted">sleep pieces</div></div>
+                  <div><div class="metric" x-text="targetsFor('care')"></div><div class="muted">care pieces</div></div>
+                  <div><div class="metric" x-text="targetsFor('gear')"></div><div class="muted">gear pieces</div></div>
+                  <div><div class="metric" x-text="targetsFor('leisure')"></div><div class="muted">leisure pieces</div></div>
+                  <div><div class="metric" x-text="targetsFor('mom')"></div><div class="muted">mom pieces</div></div>
+                </div>
+              </div>
+              <div class="card">
+                <div class="label">Sizes</div>
+                <div class="mt-2 flex flex-wrap items-center gap-2">
+                  <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
+                    <template x-for="s in ['All','50','56','62']" :key="s">
+                      <button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="s==='All' ? 'All sizes' : sizeLabel(s)"></button>
+                    </template>
+                  </div>
+                  <div class="flex rounded-xl border border-stone-200 bg-white p-1 text-xs shadow-sm">
+                    <template x-for="sys in ['EU','US']" :key="sys">
+                      <button @click="state.sizeSystem=sys; save()" :class="state.sizeSystem===sys ? 'bg-stone-700 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-2 py-1 transition" x-text="sys"></button>
+                    </template>
+                  </div>
+                </div>
+                <div class="muted" x-text="sizesCardHint"></div>
+              </div>
+            </section>
+
+            <section>
+              <div class="mb-4">
+                <div class="section-kicker">Your categories</div>
+                <h3 class="section-title">Tap a category to plan it</h3>
+              </div>
+              <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+                <template x-for="cat in itemCategories" :key="cat.id">
+                  <button @click="goCategory(cat.id)" class="rounded-2xl border border-blush-100 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
+                    <div class="flex items-center gap-3">
+                      <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blush-50 text-2xl" x-text="cat.icon"></div>
+                      <div class="flex-1">
+                        <div class="font-semibold" x-text="cat.label"></div>
+                        <div class="text-xs text-stone-400"><span x-text="ownedFor(cat.id)"></span> of <span x-text="targetsFor(cat.id)"></span> pieces</div>
+                      </div>
+                      <div class="text-xs font-semibold" :class="progressFor(cat.id) >= 100 ? 'text-green-600' : 'text-blush-600'" x-text="progressFor(cat.id) + '%'"></div>
+                    </div>
+                    <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-stone-100"><div class="h-full rounded-full bg-blush-300 transition-all" :style="`width:${progressFor(cat.id)}%`"></div></div>
+                  </button>
+                </template>
+              </div>
+            </section>
+
+            <section class="grid gap-5 lg:grid-cols-[1.15fr_.85fr]">
+              <div class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+                <div class="section-kicker">Mix &amp; match</div>
+                <div><h3 class="section-title">Outfit recipes</h3><p class="mt-1 text-sm text-stone-500">Tap a recipe to see the logic behind the wardrobe.</p></div>
+                <div class="mt-5 grid gap-3 sm:grid-cols-2">
+                  <template x-for="(outfit, i) in outfits" :key="outfit.name">
+                    <button @click="selectedOutfit=i" :class="selectedOutfit===i ? 'border-blush-300 bg-blush-50/60 ring-1 ring-blush-200' : 'border-stone-100 bg-white'" class="rounded-2xl border p-4 text-left transition hover:-translate-y-0.5 hover:shadow-sm">
+                      <div class="flex items-center gap-3"><div class="text-2xl" x-text="outfit.emoji"></div><div><div class="font-semibold" x-text="outfit.name"></div><div class="text-xs text-stone-400" x-text="outfit.when"></div></div></div>
+                      <div class="mt-3 flex items-center justify-between">
+                        <div class="flex flex-wrap gap-1.5"><template x-for="layer in outfit.layers" :key="layer"><span class="rounded-full bg-white px-2 py-1 text-[11px] text-stone-600 shadow-sm" x-text="layer"></span></template></div>
+                        <div class="ml-3 text-xs text-stone-400" x-text="availableForOutfit(i) + ' available'"></div>
+                      </div>
+                    </button>
+                  </template>
+                </div>
+              </div>
+              <div class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+                <div class="section-kicker">Selected outfit</div>
+                <div class="mt-2 text-2xl font-semibold" x-text="outfits[selectedOutfit].name"></div>
+                <p class="mt-1 text-sm text-stone-500" x-text="outfits[selectedOutfit].when"></p>
+                <div class="mt-5 space-y-2">
+                  <template x-for="(layer, i) in outfits[selectedOutfit].layers" :key="layer">
+                    <div class="flex items-center gap-3 rounded-xl border border-stone-100 bg-stone-50/70 px-3 py-3">
+                      <div class="flex h-7 w-7 items-center justify-center rounded-lg bg-white text-xs font-semibold text-blush-600" x-text="i+1"></div>
+                      <div class="flex-1"><span class="text-sm" x-text="layer"></span></div>
+                      <div class="text-xs font-medium" x-text="(getIdForLayer(layer) ? ownedTotal(getIdForLayer(layer)) + ' on hand' : 'not matched')" :class="getIdForLayer(layer) && ownedTotal(getIdForLayer(layer)) > 0 ? 'text-green-600' : 'text-rose-500'"></div>
+                    </div>
+                  </template>
+                </div>
+                <div class="mt-5 rounded-2xl bg-blush-50 p-4 text-xs leading-5 text-stone-600">
+                  <strong class="text-stone-800">Why this works:</strong> one dependable base, then one daytime style, with accessories only when the feet/conditions need them.
+                </div>
+              </div>
+            </section>
+
+            <section class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+              <div class="section-kicker">Shopping strategy</div>
+              <h3 class="section-title">Spend where quality matters</h3>
+              <p class="mt-2 max-w-2xl text-sm leading-6 text-stone-500">Use your higher-quality budget for the pieces that touch skin all day or get washed constantly. Pick the brands you want to hunt for — your picks become suggestions on every clothing card. Diapering, sleep, gear and leisure cards each have their own brand suggestions.</p>
+              <div class="mt-5 grid gap-5 lg:grid-cols-2">
+                <template x-for="tier in brandTiers" :key="tier.id">
+                  <div class="rounded-2xl border border-stone-100 bg-stone-50/60 p-4">
+                    <div class="font-semibold" x-text="tier.name"></div>
+                    <p class="mt-1 text-xs leading-5 text-stone-500" x-text="tier.note"></p>
+                    <div class="mt-3 flex flex-wrap gap-2">
+                      <template x-for="b in tierBrands(tier.id)" :key="b">
+                        <button @click="togglePickedBrand(tier.id, b)" :class="isPicked(tier.id, b) ? 'border-blush-400 bg-blush-500 text-white' : 'border-stone-200 bg-white text-stone-600 hover:border-blush-300 hover:text-blush-700'" class="rounded-full border px-3 py-1 text-xs font-medium transition" x-text="b"></button>
+                      </template>
+                    </div>
+                    <div class="mt-3 flex gap-2">
+                      <input type="text" x-model="brandDraft[tier.id]" @keydown.enter="addCustomBrand(tier.id)" placeholder="Add your own brand…" class="min-w-0 flex-1 rounded-lg border border-stone-200 bg-white px-2.5 py-1.5 text-xs">
+                      <button @click="addCustomBrand(tier.id)" class="rounded-lg bg-blush-500 px-3 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Add</button>
+                    </div>
+                  </div>
+                </template>
+              </div>
+            </section>
+
+            <section class="grid gap-5 lg:grid-cols-2">
+              <div class="rounded-3xl border border-amber-200 bg-amber-50/70 p-6">
+                <div class="text-xs font-semibold uppercase tracking-[.16em] text-amber-700">Safety note / sleep</div>
+                <h3 class="mt-2 text-xl font-semibold">Keep sleep separate from "cute layering."</h3>
+                <p class="mt-2 text-sm leading-6 text-stone-600">For sleep, think <strong>sleepsuit + an appropriate sleep bag</strong>, rather than adding cardigans, bulky jumpers or loose extra layers. Check the sleep-bag manufacturer's guidance for TOG and the room temperature. Remove hats indoors and in warm cars.</p>
+              </div>
+              <div class="rounded-3xl border border-blush-100 bg-white p-6 shadow-soft">
+                <div class="text-xs font-semibold uppercase tracking-[.16em] text-blush-600">Sources</div>
+                <p class="mt-2 text-sm leading-6 text-stone-600">The layer logic and starter quantities are a planning framework, not a medical prescription. The NHS recommends about 1 extra layer in winter and notes that several light layers are preferable to one heavy layer; it also recommends keeping sleep clothing simple to avoid overheating.</p>
+                <div class="mt-3 text-xs text-stone-400">NHS: "How to dress a newborn" · NHS: "What you'll need for your baby"</div>
+              </div>
+            </section>
+          </div>
+        </template>
+
+        <!-- ======================= CATEGORY VIEW ======================= -->
+        <template x-if="view!=='overview'">
+          <section class="scroll-mt-24">
+            <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
+              <div>
+                <div class="section-kicker" x-text="catKicker"></div>
+                <h3 class="section-title" x-text="activeCategory.title || activeCategory.label"></h3>
+                <div class="mt-2 inline-flex items-baseline gap-1.5 rounded-2xl border border-blush-200 bg-blush-50 px-3.5 py-1.5 shadow-sm" x-show="!activeCategory.tips">
+                  <span class="text-[10px] font-bold uppercase tracking-[.14em] text-blush-500">Target</span>
+                  <span class="text-xl font-bold leading-none text-blush-700" x-text="targetsFor(view)"></span>
+                  <span class="text-xs font-medium text-stone-500" x-text="view==='clothing' ? (sizeFilter==='All' ? 'pieces · across sizes' : 'pieces · size ' + sizeLabel(sizeFilter)) : 'pieces'"></span>
+                </div>
+                <p class="mt-2 text-sm text-stone-500" x-text="activeCategory.desc"></p>
+              </div>
+              <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap" x-show="activeCategory.tabs">
+                <template x-for="tab in (activeCategory.tabs||[])" :key="tab">
+                  <button @click="subFilter=tab" :class="subFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-2 transition" x-text="tab"></button>
+                </template>
+              </div>
+            </div>
+
+            <div class="mb-4 flex flex-wrap items-center gap-3" x-show="view==='clothing'">
+              <span class="text-[11px] font-bold uppercase tracking-[.14em] text-blush-500">Role</span>
+              <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
+                <template x-for="tab in ['All','Base','Sleep','Day','Layer','Cute','Accessory','Outdoor']" :key="tab">
+                  <button @click="roleFilter=tab" :class="roleFilter===tab ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="tab"></button>
+                </template>
+              </div>
+            </div>
+            <div class="mb-4 flex flex-wrap items-center gap-3" x-show="view==='clothing'">
+              <span class="text-[11px] font-bold uppercase tracking-[.14em] text-blush-500">Size</span>
+              <div class="flex flex-wrap rounded-xl border border-blush-100 bg-white p-1 text-sm shadow-sm md:flex-nowrap">
+                <template x-for="s in ['All','50','56','62']" :key="s">
+                  <button @click="sizeFilter=s" :class="sizeFilter===s ? 'bg-blush-500 text-white' : 'text-stone-500 hover:bg-stone-50'" class="rounded-lg px-3 py-1.5 transition" x-text="s==='All' ? 'All sizes' : sizeLabel(s)"></button>
+                </template>
+              </div>
+              <span x-show="sizeFilter==='50'" class="text-xs text-stone-400" x-text="sizeHint"></span>
+            </div>
+
+            <!-- tips cards -->
+            <div x-show="activeCategory.tips" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <template x-for="tip in tips" :key="tip.title">
+                <div class="flex flex-col rounded-2xl border border-blush-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
+                  <div class="flex items-center gap-3">
+                    <div class="flex h-10 w-10 items-center justify-center rounded-2xl bg-blush-50 text-xl" x-text="tip.icon"></div>
+                    <div class="font-semibold" x-text="tip.title"></div>
+                  </div>
+                  <p class="mt-3 flex-1 text-sm leading-6 text-stone-600" x-text="tip.text"></p>
+                  <div class="mt-3 border-t border-stone-100 pt-3 text-[11px] text-stone-400">
+                    <span x-show="tip.source" class="rounded-full bg-blush-50 px-2 py-0.5 font-medium text-blush-700" x-text="tip.source"></span>
+                    <span x-show="!tip.source" x-text="tip.group + ' tip'"></span>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <!-- item cards -->
+            <div x-show="!activeCategory.tips" class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              <template x-for="item in activeItems" :key="item.id">
+                <div class="flex flex-col rounded-2xl border border-blush-100 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
+                  <div class="flex items-start justify-between gap-3">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-blush-50 text-2xl" x-text="item.icon"></div>
+                    <template x-if="item.group==='Essentials' || item.group==='Optional'">
+                      <button @click="toggleEssential(item.id)" title="Tap to switch between essential and optional for you" class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500 transition hover:bg-blush-50 hover:text-blush-700" x-text="groupFor(item.id)==='Essentials' ? 'Essential ⇄' : 'Optional ⇄'"></button>
+                    </template>
+                    <template x-if="item.group!=='Essentials' && item.group!=='Optional'">
+                      <span class="rounded-full bg-stone-100 px-2.5 py-1 text-[11px] font-medium text-stone-500" x-text="item.type"></span>
+                    </template>
+                  </div>
+                  <div class="mt-4 font-semibold" x-text="item.name"></div>
+
+                  <!-- brands -->
+                  <div class="mt-1">
+                    <div class="flex flex-wrap items-center gap-1.5">
+                      <template x-for="b in brandsFor(item.id)" :key="b">
+                        <span class="inline-flex items-center gap-1 rounded-full border border-blush-200 bg-blush-50 px-2 py-0.5 text-[11px] font-medium text-blush-700">
+                          <span x-text="b"></span>
+                          <button @click="removeBrand(item.id, b)" class="text-blush-400 transition hover:text-rose-500">✕</button>
+                        </span>
+                      </template>
+                      <button x-show="brandEdit!==item.id" @click="openBrandEdit(item.id)" class="rounded-full border border-dashed border-blush-300 px-2 py-0.5 text-[11px] font-medium text-blush-600 transition hover:border-blush-500 hover:text-blush-700">+ brand</button>
+                    </div>
+                    <div x-show="brandEdit===item.id" class="relative mt-1">
+                      <input type="text" x-model="brandQuery" @focus="brandMenu=item.id" @input="brandMenu=item.id" @keydown.enter.prevent="commitBrandInput(item.id)" @blur="brandEdit=null; brandMenu=null" @keydown.escape="brandEdit=null; brandMenu=null" placeholder="Type or pick a brand" class="w-full rounded-lg border border-blush-200 bg-white px-2 py-1 text-xs text-blush-700 outline-none transition focus:border-blush-300">
+                      <div x-show="brandMenu===item.id" class="brand-scroll absolute left-0 right-0 z-20 mt-1 max-h-64 overflow-y-auto rounded-xl border border-blush-200 bg-white py-1 shadow-lg shadow-blush-700/10">
+                        <template x-for="b in filteredBrandOptions(item.id)" :key="b">
+                          <button type="button" @mousedown.prevent="chooseBrand(item.id, b)" class="block w-full px-3 py-1.5 text-left text-xs text-stone-600 transition hover:bg-blush-50 hover:pl-3.5 hover:text-blush-700" x-text="b"></button>
+                        </template>
+                        <div x-show="filteredBrandOptions(item.id).length===0" class="px-3 py-2 text-xs italic text-stone-400">No match — press Enter to keep what you typed</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- colors -->
+                  <div class="mt-2 flex flex-wrap items-center gap-1.5" x-show="item.preferred_colors || colorsFor(item.id).length">
+                    <template x-for="c in colorsFor(item.id)" :key="c">
+                      <span class="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600">
+                        <span x-text="c"></span>
+                        <button @click="removeColor(item.id, c)" class="text-stone-300 transition hover:text-rose-500">✕</button>
+                      </span>
+                    </template>
+                    <button x-show="colorEdit!==item.id" @click="colorEdit=item.id; colorDraft=''" class="rounded-full border border-dashed border-stone-300 px-2 py-0.5 text-[11px] text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ color</button>
+                    <span x-show="colorEdit===item.id" class="inline-flex items-center gap-1">
+                      <input type="text" x-model="colorDraft" @keydown.enter="addColor(item.id)" placeholder="color…" class="w-24 rounded-full border border-blush-200 px-2 py-0.5 text-[11px] outline-none">
+                      <button @click="addColor(item.id)" class="text-[11px] font-medium text-blush-600">add</button>
+                    </span>
+                  </div>
+
+                  <!-- link -->
+                  <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
+                    <a x-show="linkFor(item.id)" :href="linkFor(item.id)" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-full bg-blush-50 px-2 py-1 font-medium text-blush-700 transition hover:bg-blush-200">🔗 <span>Buy</span></a>
+                    <button x-show="linkFor(item.id) && linkEdit!==item.id" @click="linkEdit=item.id; linkDraft=linkFor(item.id)" class="text-[11px] text-stone-400 transition hover:text-blush-600">edit</button>
+                    <button x-show="!linkFor(item.id) && linkEdit!==item.id" @click="linkEdit=item.id; linkDraft=''" class="inline-flex items-center gap-1 rounded-full border border-dashed border-stone-300 px-2 py-1 text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ link</button>
+                    <button x-show="state.links[item.id] && linkEdit!==item.id" @click="clearLink(item.id)" class="text-[11px] text-stone-400 transition hover:text-rose-500">remove</button>
+                  </div>
+                  <div class="mt-2 flex gap-1.5" x-show="linkEdit===item.id">
+                    <input type="url" x-model="linkDraft" @keydown.enter="saveLink(item.id)" placeholder="Paste product link (https://…)" class="min-w-0 flex-1 rounded-lg border border-blush-200 bg-white px-2 py-1.5 text-xs">
+                    <button @click="saveLink(item.id)" class="rounded-lg bg-blush-500 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Save</button>
+                  </div>
+
+                  <p class="mt-2 min-h-5 text-xs leading-5 text-stone-500" x-show="item.note" x-text="item.note"></p>
+
+                  <!-- target + counter -->
+                  <div class="mt-auto pt-4">
+                    <div class="flex items-end justify-between border-t border-stone-100 pt-4">
+                      <div>
+                        <div class="text-[11px] text-stone-400" x-text="item.size_targets ? (sizeFilter==='All' ? 'Target · all sizes' : 'Target · size ' + sizeLabel(sizeFilter)) : 'Target'"></div>
+                        <div class="font-semibold"><span x-text="cardTarget(item.id)"></span> <span x-text="item.unit"></span></div>
+                      </div>
+                      <div class="flex items-center gap-1 rounded-xl bg-stone-50 p-1" x-show="!item.size_targets || sizeFilter!=='All'">
+                        <button @click="dec(item.id)" class="h-8 w-8 rounded-lg text-lg text-stone-500 hover:bg-white">−</button>
+                        <div class="w-7 text-center text-sm font-semibold" x-text="countFor(item.id)"></div>
+                        <button @click="inc(item.id)" class="h-8 w-8 rounded-lg bg-white text-blush-600 shadow-sm hover:bg-blush-50">+</button>
+                      </div>
+                    </div>
+                    <div class="mt-3 flex flex-wrap gap-1.5" x-show="item.size_targets && sizeFilter==='All'">
+                      <template x-for="s in item.sizes" :key="s">
+                        <button @click="sizeFilter=s" class="rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600 transition hover:border-blush-300 hover:text-blush-700" x-text="sizeLabel(s) + ': ' + ((state.counts[item.id]||{})[s]||0) + '/' + (item.size_targets[s]||0)"></button>
+                      </template>
+                    </div>
+                    <div class="mt-3 h-1.5 overflow-hidden rounded-full bg-stone-100"><div class="h-full rounded-full bg-blush-300 transition-all" :style="`width:${barPct(item.id)}%`"></div></div>
+                  </div>
+                </div>
+              </template>
+            </div>
+
+            <div x-show="view==='clothing' && sizeFilter!=='All' && hiddenInSize().length" class="mt-3 flex flex-wrap items-center gap-x-2 gap-y-1.5 text-xs text-stone-400">
+              <span>Not made in size <span class="font-semibold text-stone-500" x-text="sizeLabel(sizeFilter)"></span>:</span>
+              <template x-for="it in hiddenInSize()" :key="it.id">
+                <span class="rounded-full bg-stone-50 px-2 py-0.5" x-text="it.name + ' · from ' + sizeLabel(it.sizes[0])"></span>
+              </template>
+            </div>
+          </section>
+        </template>
+      </div>
+    </main>
+  </div>
+
+  <style>
+    .nav{display:flex;width:100%;align-items:center;gap:.5rem;border-radius:.75rem;padding:.65rem .75rem;color:#6b6565;text-align:left}.nav.active{background:rgb(var(--b100));color:rgb(var(--b700));font-weight:600}
+    .card{border:1px solid rgb(var(--b200));background:#fff;border-radius:1.5rem;padding:1.25rem;box-shadow:0 10px 30px rgba(var(--shadow-rgb),.05)}
+    .label,.section-kicker{font-size:.68rem;font-weight:700;letter-spacing:.16em;text-transform:uppercase;color:rgb(var(--kicker))}.metric{margin-top:.35rem;font-size:1.7rem;font-weight:650;letter-spacing:-.02em}.muted{margin-top:.2rem;font-size:.75rem;line-height:1.35rem;color:#857d7d}.section-title{margin-top:.2rem;font-size:1.5rem;font-weight:650;letter-spacing:-.02em}
+    .brand-scroll{scrollbar-width:thin;scrollbar-color:rgb(var(--b300)) transparent}
+    .brand-scroll::-webkit-scrollbar{width:6px}
+    .brand-scroll::-webkit-scrollbar-thumb{background:rgb(var(--b300));border-radius:9999px}
+    .brand-scroll::-webkit-scrollbar-track{background:transparent}
+    [x-cloak]{display:none!important}
+  </style>
+
+  <script>
+    function app(){
+      const D = window.APP_DATA;
+      const allItems = D.wardrobe.concat(D.sleep, D.care, D.gear, D.leisure, D.mom);
+      const itemsByCategory = {
+        clothing: D.wardrobe, sleep: D.sleep, care: D.care,
+        gear: D.gear, leisure: D.leisure, mom: D.mom,
+      };
+      const categoryOf = {};
+      for (const [cat, items] of Object.entries(itemsByCategory)) {
+        for (const it of items) categoryOf[it.id] = cat;
+      }
+      const US_SIZES = {'50':'NB','56':'0–3M','62':'3–6M'};
+      const SEASONS = {12:'Winter',1:'Winter',2:'Winter',3:'Spring',4:'Spring',5:'Spring',6:'Summer',7:'Summer',8:'Summer',9:'Autumn',10:'Autumn',11:'Autumn'};
+      const SEASON_EMOJI = {Winter:'❄️',Spring:'🌸',Summer:'☀️',Autumn:'🍂'};
+      const BABY_SIZES = {
+        8:['raspberry','🫐'],9:['green olive','🫒'],10:['kumquat','🍊'],11:['lime','🍋'],12:['plum','🍑'],13:['peach','🍑'],
+        14:['lemon','🍋'],15:['apple','🍎'],16:['avocado','🥑'],17:['pear','🍐'],18:['bell pepper','🫑'],19:['tomato','🍅'],
+        20:['banana','🍌'],21:['carrot','🥕'],22:['papaya','🥭'],23:['grapefruit','🍊'],24:['ear of corn','🌽'],25:['rutabaga','🥔'],
+        26:['zucchini','🥒'],27:['cauliflower','🥦'],28:['eggplant','🍆'],29:['butternut squash','🎃'],30:['cabbage','🥬'],31:['coconut','🥥'],
+        32:['jicama','🥔'],33:['pineapple','🍍'],34:['cantaloupe','🍈'],35:['honeydew melon','🍈'],36:['romaine lettuce','🥬'],
+        37:['bunch of Swiss chard','🥬'],38:['leek','🥬'],39:['mini watermelon','🍉'],40:['small pumpkin','🎃'],41:['watermelon','🍉'],42:['watermelon','🍉'],
+      };
+      const themes = [
+        {id:'peach', label:'Peach', rgb:'215 131 121'},
+        {id:'ocean', label:'Dusty blue', rgb:'95 167 176'},
+        {id:'burgundy', label:'Dusty burgundy', rgb:'188 107 114'},
+        {id:'prune', label:'Soft prune', rgb:'166 120 183'},
+      ];
+      const categories = [
+        {id:'clothing', label:'Baby clothing', icon:'👕', title:'What belongs in the capsule?', desc:'A small, repeatable wardrobe — sized from birth to six months.'},
+        {id:'sleep', label:'Sleep', icon:'🌙', title:'The sleep corner', desc:'What your baby wears for sleep, plus the safe-sleep setup around it.', tabs:['All','Essentials','Optional']},
+        {id:'care', label:'Diapering & bath & care', icon:'🧷', title:'Clean, warm, and comfy', desc:'The everyday kit for changes, baths, and little health checks.', tabs:['All','Diapering','Bath','Care']},
+        {id:'gear', label:'Baby gear', icon:'🚼', title:'Getting around & settling down', desc:'The big-ticket basics for transport and safe spots to put baby down.'},
+        {id:'leisure', label:'Leisure', icon:'🧸', title:'Play & cuddle', desc:'A small starter set for awake time.'},
+        {id:'mom', label:'Mom', icon:'🤱', title:'For mum', desc:'Nursing essentials and postpartum care.', tabs:['All','Nursing','Health & care']},
+        {id:'tips', label:'Tips & tricks', icon:'💡', title:'Little things that help', desc:'Short, practical wisdom — collected from experienced parents and official guidance.', tips:true},
+      ];
+      const itemCategories = categories.filter(c => !c.tips);
+
+      const DEFAULT_STATE = {
+        counts:{}, links:{}, colors:{}, essentials:{},
+        brands:{picked:{quality:[],value:[]}, custom:{quality:[],value:[]}, items:{}},
+        sizeSystem:'EU', theme:'peach', profile:{name:'', due:''},
+      };
+
+      function loadState(){
+        try{
+          const raw = JSON.parse(localStorage.getItem('babyPrepState')||'null');
+          if(raw) return {...DEFAULT_STATE, ...raw};
+        }catch(e){}
+        // one-time migration from the earlier local-storage keys
+        const s = JSON.parse(JSON.stringify(DEFAULT_STATE));
+        try{
+          const counts = JSON.parse(localStorage.getItem('babyWardrobeCounts')||'null');
+          if(counts){
+            for(const k of Object.keys(counts)){
+              const v = counts[k];
+              if(v && typeof v==='object'){ s.counts[k]=v; continue; }
+              const it = allItems.find(i=>i.id===k);
+              if(!it) continue;
+              if(it.size_targets){ s.counts[k]={[ (it.sizes&&it.sizes[0]) || '50' ]:v}; }
+              else { s.counts[k]={_:v}; }
+            }
+          }
+          const links = JSON.parse(localStorage.getItem('babyItemLinks')||'null');
+          if(links) s.links = links;
+          const brands = JSON.parse(localStorage.getItem('babyBrands')||'null');
+          if(brands){
+            const items = {};
+            for(const [k,v] of Object.entries(brands.items||{})){
+              items[k] = Array.isArray(v) ? v : (v ? [v] : []);
+            }
+            s.brands = {...DEFAULT_STATE.brands, ...brands, items};
+          }
+          const sys = localStorage.getItem('sizeSystem');
+          if(sys) s.sizeSystem = sys;
+        }catch(e){}
+        return s;
+      }
+
+      return {
+        D, allItems, categories, itemCategories, themes,
+        outfits: D.outfits, tips: D.tips,
+        brandTiers: D.brandTiers, categoryBrands: D.categoryBrands,
+        view:'overview', subFilter:'All', roleFilter:'All', sizeFilter:'All',
+        selectedOutfit:0, moreOpen:false, settingsOpen:false,
+        brandMenu:null, brandQuery:'', brandEdit:null, colorEdit:null, colorDraft:'',
+        linkEdit:null, linkDraft:'', brandDraft:{quality:'', value:''},
+        profileDraft:{name:'', due:''},
+        state: loadState(),
+
+        init(){
+          document.documentElement.dataset.theme = this.state.theme || 'peach';
+          localStorage.setItem('babyTheme', this.state.theme || 'peach');
+        },
+        save(){
+          localStorage.setItem('babyPrepState', JSON.stringify(this.state));
+        },
+
+        // ---------- navigation ----------
+        goOverview(){ this.view='overview'; this.moreOpen=false; window.scrollTo({top:0, behavior:'smooth'}); },
+        goCategory(id){ this.view=id; this.subFilter='All'; this.roleFilter='All'; this.moreOpen=false; },
+        get activeCategory(){ return categories.find(c=>c.id===this.view) || categories[0]; },
+        get catKicker(){ const i = categories.findIndex(c=>c.id===this.view); return String(i).padStart(2,'0') + ' / ' + this.activeCategory.label; },
+        get activeItems(){
+          const items = itemsByCategory[this.view] || [];
+          if(this.view==='clothing'){
+            return items.filter(it => (this.roleFilter==='All' || it.type===this.roleFilter) && this.inSize(it.id));
+          }
+          if(this.activeCategory.tabs){
+            return items.filter(it => this.subFilter==='All' || this.subFilter===this.groupFor(it.id) || this.subFilter===it.group);
+          }
+          return items;
+        },
+
+        // ---------- items ----------
+        itemById(id){ return allItems.find(i=>i.id===id) },
+        groupFor(id){
+          const it=this.itemById(id);
+          if(!it) return '';
+          if(it.group==='Essentials' || it.group==='Optional'){
+            return this.state.essentials[id] || it.group;
+          }
+          return it.group;
+        },
+        toggleEssential(id){
+          this.state.essentials={...this.state.essentials, [id]: this.groupFor(id)==='Essentials' ? 'Optional' : 'Essentials'};
+          this.save();
+        },
+        cardTarget(id){
+          const it=this.itemById(id);
+          if(!it) return 0;
+          if(!it.size_targets) return it.target;
+          if(this.sizeFilter==='All') return Object.values(it.size_targets).reduce((a,b)=>a+b,0);
+          return it.size_targets[this.sizeFilter] || 0;
+        },
+        countFor(id){
+          const c=this.state.counts[id]||{};
+          if(!this.itemById(id).size_targets) return c['_']||0;
+          if(this.sizeFilter==='All') return Object.values(c).reduce((a,b)=>a+b,0);
+          return c[this.sizeFilter]||0;
+        },
+        ownedTotal(id){ return Object.values(this.state.counts[id]||{}).reduce((a,b)=>a+b,0) },
+        barPct(id){ const t=this.cardTarget(id); return t ? Math.min(100, this.countFor(id)/t*100) : 0 },
+        inc(id){
+          const it=this.itemById(id);
+          const s = it.size_targets ? this.sizeFilter : '_';
+          if(s==='All') return;
+          const c={...(this.state.counts[id]||{})};
+          c[s]=(c[s]||0)+1;
+          this.state.counts={...this.state.counts, [id]:c};
+          this.save();
+        },
+        dec(id){
+          const it=this.itemById(id);
+          const s = it.size_targets ? this.sizeFilter : '_';
+          if(s==='All') return;
+          const c={...(this.state.counts[id]||{})};
+          c[s]=Math.max(0,(c[s]||0)-1);
+          this.state.counts={...this.state.counts, [id]:c};
+          this.save();
+        },
+        targetsFor(cat){
+          const items = itemsByCategory[cat]||[];
+          if(cat==='clothing'){
+            const sum=it=>Object.values(it.size_targets).reduce((a,b)=>a+b,0);
+            return this.sizeFilter==='All'
+              ? items.reduce((s,i)=>s+sum(i),0)
+              : items.reduce((s,i)=>s+(i.size_targets[this.sizeFilter]||0),0);
+          }
+          return items.reduce((s,i)=>s+i.target,0);
+        },
+        ownedFor(cat){
+          return (itemsByCategory[cat]||[]).reduce((s,it)=>s+this.ownedTotal(it.id),0);
+        },
+        progressFor(cat){
+          const t=this.targetsFor(cat);
+          return t ? Math.min(100, Math.round(this.ownedFor(cat)/t*100)) : 0;
+        },
+        get progress(){
+          const items = itemsByCategory.clothing;
+          let sum=0, n=0;
+          for(const it of items){
+            const t=this.cardTarget(it.id);
+            if(!t) continue;
+            sum+=Math.min(1,this.countFor(it.id)/t); n++;
+          }
+          return n ? Math.round(sum/n*100) : 0;
+        },
+
+        // ---------- sizes ----------
+        sizeLabel(s){ return s==='All' ? 'All' : (this.state.sizeSystem==='US' ? (US_SIZES[s]||s) : s) },
+        get sizeHint(){ return '≈ birth to 6 weeks. Buy little, they outgrow it fast.' },
+        get sizesCardHint(){
+          return this.state.sizeSystem==='US'
+            ? 'US sizes are by age: NB (newborn) · 0–3M · 3–6M. Click a size to plan it.'
+            : 'EU size = max height in cm. Click a size to plan it. 50 ≈ 0–1 mo · 56 ≈ 1–3 mo · 62 ≈ 3–6 mo.';
+        },
+        inSize(id){
+          if(this.sizeFilter==='All') return true;
+          const it=this.itemById(id);
+          return !!(it && it.sizes && it.sizes.includes(this.sizeFilter));
+        },
+        hiddenInSize(){
+          if(this.sizeFilter==='All') return [];
+          return (itemsByCategory.clothing||[]).filter(it => !(it.sizes||[]).includes(this.sizeFilter));
+        },
+
+        // ---------- brands ----------
+        brandsFor(id){
+          const v=this.state.brands.items[id];
+          if(Array.isArray(v)) return v;
+          if(typeof v==='string' && v) return [v];
+          const d=(this.itemById(id)||{}).brand;
+          return d ? [d] : [];
+        },
+        addBrand(id,b){
+          if(b && !this.brandsFor(id).includes(b)){
+            this.state.brands.items={...this.state.brands.items, [id]:this.brandsFor(id).concat(b)};
+            this.save();
+          }
+        },
+        removeBrand(id,b){
+          this.state.brands.items={...this.state.brands.items, [id]:this.brandsFor(id).filter(x=>x!==b)};
+          this.save();
+        },
+        openBrandEdit(id){ this.brandEdit=id; this.brandQuery=''; this.brandMenu=id; },
+        filteredBrandOptions(id){
+          const q=(this.brandQuery||'').trim().toLowerCase();
+          return this.brandOptionsFor(id).filter(b => !q || b.toLowerCase().includes(q));
+        },
+        chooseBrand(id,b){
+          this.addBrand(id,b);
+          this.brandEdit=null; this.brandMenu=null; this.brandQuery='';
+        },
+        commitBrandInput(id){
+          const v=(this.brandQuery||'').trim();
+          if(v){
+            const match=this.brandOptionsFor(id).find(o=>o.toLowerCase()===v.toLowerCase());
+            this.addBrand(id, match||v);
+          }
+          this.brandEdit=null; this.brandMenu=null; this.brandQuery='';
+        },
+        brandOptionsFor(id){
+          const cat = categoryOf[id] || 'clothing';
+          const pool = new Set();
+          if(cat === 'clothing'){
+            for(const t of this.brandTiers){ for(const b of this.tierBrands(t.id)) pool.add(b); }
+          } else {
+            for(const b of (this.categoryBrands[cat]||[])) pool.add(b);
+          }
+          for(const it of (itemsByCategory[cat]||[])){
+            for(const b of this.brandsFor(it.id)) pool.add(b);
+          }
+          return [...pool].sort();
+        },
+        tierBrands(tid){ const t=this.brandTiers.find(t=>t.id===tid); return t ? t.brands.concat((this.state.brands.custom[tid])||[]) : []; },
+        isPicked(tid,b){ return ((this.state.brands.picked[tid])||[]).includes(b); },
+        togglePickedBrand(tid,b){
+          const arr=this.state.brands.picked[tid]||[];
+          this.state.brands.picked[tid] = arr.includes(b) ? arr.filter(x=>x!==b) : arr.concat(b);
+          this.save();
+        },
+        addCustomBrand(tid){
+          const v=(this.brandDraft[tid]||'').trim();
+          if(!v) return;
+          if(!((this.state.brands.custom[tid])||[]).includes(v)) this.state.brands.custom[tid]=(this.state.brands.custom[tid]||[]).concat(v);
+          if(!((this.state.brands.picked[tid])||[]).includes(v)) this.state.brands.picked[tid]=(this.state.brands.picked[tid]||[]).concat(v);
+          this.brandDraft[tid]='';
+          this.save();
+        },
+
+        // ---------- colors ----------
+        colorsFor(id){ return this.state.colors[id] ?? ((this.itemById(id)||{}).preferred_colors ?? []) },
+        addColor(id){
+          const v=(this.colorDraft||'').trim();
+          if(v && !this.colorsFor(id).includes(v)){
+            this.state.colors={...this.state.colors, [id]:this.colorsFor(id).concat(v)};
+            this.save();
+          }
+          this.colorDraft=''; this.colorEdit=null;
+        },
+        removeColor(id,c){
+          this.state.colors={...this.state.colors, [id]:this.colorsFor(id).filter(x=>x!==c)};
+          this.save();
+        },
+
+        // ---------- links ----------
+        linkFor(id){ return this.state.links[id] || (this.itemById(id)||{}).purchase_url || '' },
+        saveLink(id){
+          const v=(this.linkDraft||'').trim();
+          const {[id]:_drop, ...rest}=this.state.links;
+          this.state.links = v ? {...rest, [id]:v} : rest;
+          this.save();
+          this.linkEdit=null;
+        },
+        clearLink(id){
+          const {[id]:_drop, ...rest}=this.state.links;
+          this.state.links=rest;
+          this.save();
+        },
+
+        // ---------- outfits ----------
+        getIdForLayer(layer){
+          const name = String(layer).toLowerCase().trim();
+          if(name === 'day outfit'){
+            const ids = ['Long-sleeve bodysuit','Romper','Socks / booties'].map(l => this.exactId(l.toLowerCase()));
+            if(ids.some(id => !id)) return null;
+            return ids.sort((a,b) => this.ownedTotal(a) - this.ownedTotal(b))[0];
+          }
+          return this.exactId(name);
+        },
+        exactId(name){
+          for(const item of allItems){
+            const iname = String(item.name).toLowerCase();
+            if(iname === name) return item.id;
+            if(iname.includes(name) || name.includes(iname)) return item.id;
+          }
+          return null;
+        },
+        availableForOutfit(index){
+          const layers = this.outfits[index].layers || [];
+          const ids = layers.map(l => this.getIdForLayer(l));
+          if(ids.length === 0) return 0;
+          if(ids.some(id => id === null)) return 0;
+          return Math.min(...ids.map(id => Math.floor(this.ownedTotal(id))));
+        },
+
+        // ---------- theme ----------
+        setTheme(id){
+          this.state.theme=id;
+          document.documentElement.dataset.theme=id;
+          localStorage.setItem('babyTheme', id);
+          this.save();
+        },
+
+        // ---------- profile / personalization ----------
+        openSettings(){
+          this.profileDraft={name:this.state.profile.name||'', due:this.state.profile.due||''};
+          this.settingsOpen=true;
+        },
+        saveProfile(){
+          this.state.profile={name:(this.profileDraft.name||'').trim().slice(0,40), due:this.profileDraft.due||''};
+          this.save();
+          this.settingsOpen=false;
+        },
+        get babyDisplay(){ return this.state.profile.name || 'your little one' },
+        get seasonLabel(){
+          const due=this.state.profile.due;
+          if(!due) return 'Winter';
+          const m=Number(due.slice(5,7));
+          return SEASONS[m] || 'Winter';
+        },
+        get seasonEmoji(){ return SEASON_EMOJI[this.seasonLabel] || '❄️' },
+        get daysToDue(){
+          const due=this.state.profile.due;
+          if(!due) return null;
+          const d=new Date(due+'T00:00:00');
+          const days=Math.ceil((d-new Date())/86400000);
+          return days>0 ? days : null;
+        },
+        get arrived(){
+          const due=this.state.profile.due;
+          if(!due) return false;
+          return new Date(due+'T00:00:00') < new Date();
+        },
+        get babyNow(){
+          const due=this.state.profile.due;
+          if(!due) return null;
+          if(this.arrived){
+            return {emoji:'👶', title:'Welcome to the world!',
+              text:`${this.babyDisplay} has arrived — the prep is done, enjoy it.`,
+              footer:'🎉 so happy for you 🎉'};
+          }
+          const days=this.daysToDue;
+          const week=Math.max(8, Math.min(42, 40-Math.floor((days||0)/7)));
+          const weeks=Object.keys(BABY_SIZES).map(Number).sort((a,b)=>a-b);
+          const wk=weeks.filter(w=>w<=week).pop();
+          const [sizeName, sizeEmoji]=BABY_SIZES[wk];
+          let flower, stage;
+          if(days>84){ flower='🌱'; stage='sprouting'; }
+          else if(days>28){ flower='🌿'; stage='growing'; }
+          else { flower='🌸'; stage='blooming'; }
+          return {
+            emoji:sizeEmoji,
+            title:`About the size of a ${sizeName}`,
+            text:`Week ${week} — ${this.babyDisplay} is ${stage} ${flower}`,
+            footer:`${flower} ${days} days to go ${flower}`,
+          };
+        },
+
+        // ---------- backup ----------
+        exportData(){
+          const blob=new Blob([JSON.stringify({app:'baby-prep', version:1, state:this.state}, null, 2)], {type:'application/json'});
+          const url=URL.createObjectURL(blob);
+          const a=document.createElement('a');
+          a.href=url;
+          a.download='baby-prep-backup.json';
+          a.click();
+          URL.revokeObjectURL(url);
+        },
+        importData(event){
+          const file=event.target.files[0];
+          if(!file) return;
+          const reader=new FileReader();
+          reader.onload=()=>{
+            try{
+              const parsed=JSON.parse(reader.result);
+              const state=parsed.state || parsed;
+              if(!state || typeof state!=='object') throw new Error('bad file');
+              this.state={...DEFAULT_STATE, ...state};
+              this.save();
+              location.reload();
+            }catch(e){ alert("That file doesn't look like a Baby Prep backup."); }
+          };
+          reader.readAsText(file);
+          event.target.value='';
+        },
+      };
+    }
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+    }
+  </script>
+</body>
+</html>

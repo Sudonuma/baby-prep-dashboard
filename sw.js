@@ -1,11 +1,13 @@
-// Minimal service worker: cache the static shell (icons, theme css) and
-// serve pages network-first so account data is always fresh.
-const CACHE = "baby-prep-v1";
+// Minimal service worker: cache the static shell (data, icons, theme css) and
+// serve pages network-first so updates arrive while offline still works.
+const CACHE = "baby-prep-local-v1";
 const SHELL = [
-  "/static/themes.css",
-  "/static/icons/icon-192.png",
-  "/static/icons/icon-512.png",
-  "/static/icons/icon-maskable-512.png",
+  "./",
+  "./static/app-data.js",
+  "./static/themes.css",
+  "./static/icons/icon-192.png",
+  "./static/icons/icon-512.png",
+  "./static/icons/icon-maskable-512.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -31,9 +33,10 @@ self.addEventListener("fetch", (event) => {
         return resp;
       }))
     );
+  } else {
+    // pages: network, falling back to cache when offline
+    event.respondWith(
+      fetch(event.request).catch(() => caches.match(event.request).then((hit) => hit || Response.error()))
+    );
   }
-  // everything else: network, falling back to cache when offline
-  event.respondWith(
-    fetch(event.request).catch(() => caches.match(event.request).then((hit) => hit || Response.error()))
-  );
 });
