@@ -231,6 +231,28 @@
             </div>
         {% endmacro %}
 
+        <section>
+          <div class="mb-4">
+            <div class="section-kicker">Your categories</div>
+            <h3 class="section-title">Tap a category to plan it</h3>
+          </div>
+          <div class="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            <template x-for="cat in categories" :key="cat.id">
+              <button @click="goTo(cat.view, cat.section)" class="rounded-2xl border border-blush-100 bg-white p-5 text-left shadow-sm transition hover:-translate-y-0.5 hover:shadow-soft">
+                <div class="flex items-center gap-3">
+                  <div class="flex h-11 w-11 items-center justify-center rounded-2xl bg-blush-50 text-2xl" x-text="cat.icon"></div>
+                  <div class="flex-1">
+                    <div class="font-semibold" x-text="cat.label"></div>
+                    <div class="text-xs text-stone-400"><span x-text="ownedFor(cat.id)"></span> of <span x-text="targetsFor(cat.id)"></span> pieces</div>
+                  </div>
+                  <div class="text-xs font-semibold" :class="progressFor(cat.id) >= 100 ? 'text-green-600' : 'text-blush-600'" x-text="progressFor(cat.id) + '%'"></div>
+                </div>
+                <div class="mt-4 h-1.5 overflow-hidden rounded-full bg-stone-100"><div class="h-full rounded-full bg-blush-300 transition-all" :style="`width:${progressFor(cat.id)}%`"></div></div>
+              </button>
+            </template>
+          </div>
+        </section>
+
         <section id="wardrobe-section" class="scroll-mt-24" x-show="filter!=='SleepSetup' && filter!=='CareSetup' && filter!=='GearSetup' && filter!=='LeisureSetup' && filter!=='MomSetup' && filter!=='TipsSetup'">
           <div class="mb-4 flex flex-col justify-between gap-3 sm:flex-row sm:items-end">
             <div>
@@ -819,6 +841,34 @@
           return this.wardrobe.reduce((s,i)=>s+(i.size_targets[this.sizeFilter]||0),0);
         },
         get sleepTargets(){ return this.sleep.reduce((s,i)=>s+i.target,0) },
+        categories:[
+          {id:'clothing', label:'Baby clothing', icon:'👕', view:'Clothing', section:'wardrobe-section'},
+          {id:'sleep', label:'Sleep', icon:'🌙', view:'SleepSetup', section:'sleep-section'},
+          {id:'care', label:'Diapering & bath & care', icon:'🧷', view:'CareSetup', section:'care-section'},
+          {id:'gear', label:'Baby gear', icon:'🚼', view:'GearSetup', section:'gear-section'},
+          {id:'leisure', label:'Leisure', icon:'🧸', view:'LeisureSetup', section:'leisure-section'},
+          {id:'mom', label:'Mom', icon:'🤱', view:'MomSetup', section:'mom-section'},
+        ],
+        targetsFor(cat){
+          const items = (this.itemsByCategoryRef()||{})[cat] || [];
+          if(cat==='clothing'){
+            const sum=it=>Object.values(it.size_targets||{}).reduce((a,b)=>a+b,0);
+            return this.sizeFilter==='All'
+              ? items.reduce((s,i)=>s+sum(i),0)
+              : items.reduce((s,i)=>s+((i.size_targets||{})[this.sizeFilter]||0),0);
+          }
+          return items.reduce((s,i)=>s+i.target,0);
+        },
+        ownedFor(cat){
+          return ((this.itemsByCategoryRef()||{})[cat] || []).reduce((s,it)=>s+this.ownedTotal(it.id),0);
+        },
+        progressFor(cat){
+          const t=this.targetsFor(cat);
+          return t ? Math.min(100, Math.round(this.ownedFor(cat)/t*100)) : 0;
+        },
+        itemsByCategoryRef(){
+          return {clothing:this.wardrobe, sleep:this.sleep, care:this.care, gear:this.gear, leisure:this.leisure, mom:this.mom};
+        },
         get careTargets(){ return this.care.reduce((s,i)=>s+i.target,0) },
         get gearTargets(){ return this.gear.reduce((s,i)=>s+i.target,0) },
         get leisureTargets(){ return this.leisure.reduce((s,i)=>s+i.target,0) },
