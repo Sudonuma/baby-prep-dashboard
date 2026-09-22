@@ -352,9 +352,9 @@ async def register(request: Request, username: str = Form(...),
     if password != password2:
         return templates.TemplateResponse(request, "register.html",
             {"error": "The two passwords don't match."}, status_code=400)
-    if email and not _valid_email(email):
+    if not email or not _valid_email(email):
         return templates.TemplateResponse(request, "register.html",
-            {"error": "That email address doesn't look valid."}, status_code=400)
+            {"error": "Please enter a valid email address — it's needed for password recovery."}, status_code=400)
     with get_db() as db:
         if get_user_by_name(db, username):
             return templates.TemplateResponse(request, "register.html",
@@ -402,10 +402,10 @@ async def settings_save(request: Request, baby_name: str = Form(""), due_date: s
         return RedirectResponse("/login", status_code=303)
     baby_name = baby_name.strip()[:40]
     email = email.strip().lower()
-    if email and not _valid_email(email):
+    if not email or not _valid_email(email):
         return templates.TemplateResponse(request, "settings.html", {
             **get_profile_safe(user), "username": user["username"],
-            "welcome": "", "error": "That email address doesn't look valid.",
+            "welcome": "", "error": "Please enter a valid email address — it's needed for password recovery.",
             "theme": "peach", "email": email}, status_code=400)
     if due_date:
         try:
