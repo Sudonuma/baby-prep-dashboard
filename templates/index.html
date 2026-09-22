@@ -644,7 +644,16 @@
         categoryBrands: {{ category_brands|tojson }},
         brands: {picked:{quality:[],value:[]}, custom:{quality:[],value:[]}, items:{}},
         brandDraft:{quality:'', value:''},
-        tierBrands(tid){ const t=this.brandTiers.find(t=>t.id===tid); return t ? t.brands.concat(this.brands.custom[tid]||[]) : []; },
+        tierBrands(tid){
+          const t=this.brandTiers.find(t=>t.id===tid);
+          if(!t) return [];
+          const seen=new Set(); const out=[];
+          for(const b of t.brands.concat(this.brands.custom[tid]||[])){
+            const key=b.toLowerCase();
+            if(!seen.has(key)){ seen.add(key); out.push(b); }
+          }
+          return out;
+        },
         isPicked(tid,b){ return (this.brands.picked[tid]||[]).includes(b); },
         togglePickedBrand(tid,b){
           const arr=this.brands.picked[tid]||[];

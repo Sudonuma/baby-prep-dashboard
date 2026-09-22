@@ -107,7 +107,7 @@ OUTFITS = [
 # Brand pools for the shopping strategy: curated starting points the user
 # picks from and can extend with their own brands (saved in the browser).
 BRAND_TIERS = [
-    {"id":"quality","name":"High-quality basics","note":"Bodies, sleepsuits, socks and other repeat-wash basics that touch skin all day.","brands":["Sanetta","Steiff","Schlösser","Maximo","Cosilana","Engel","Disana","Hugo Boss Baby"]},
+    {"id":"quality","name":"High-quality basics","note":"Bodies, sleepsuits, socks and other repeat-wash basics that touch skin all day.","brands":["Sanetta","Petit Bateau","H&M"]},
     {"id":"value","name":"Cute outfits for a good price","note":"Prettier rompers, knit layers, trousers and going-out combinations.","brands":["Little Dutch","Mayoral","Next","H&M","C&A","Zara","Name it"]},
 ]
 
