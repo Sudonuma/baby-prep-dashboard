@@ -5,7 +5,7 @@ import secrets
 
 from fastapi import Request
 
-from database import get_db, get_user_by_email, get_users_by_name, user_for_token
+from database import get_db, get_user_by_email, user_for_token
 
 PBKDF2_ITERATIONS = 240_000
 SESSION_COOKIE = "baby_session"
@@ -30,20 +30,13 @@ def verify_password(password: str, stored: str) -> bool:
     return hmac.compare_digest(candidate, digest)
 
 
-def authenticate(db, identifier: str, password: str):
-    """Log in by email or username. Returns (user, error_message)."""
-    identifier = identifier.strip()
-    if "@" in identifier:
-        user = get_user_by_email(db, identifier)
-        if user and verify_password(password, user["password_hash"]):
-            return user, None
-        return None, "Wrong email or password."
-    matches = get_users_by_name(db, identifier)
-    if len(matches) > 1:
-        return None, "Several accounts use that name — please log in with your email."
-    if matches and verify_password(password, matches[0]["password_hash"]):
-        return matches[0], None
-    return None, "Wrong username or password."
+def authenticate(db, email: str, password: str):
+    """Log in by email (emails are unique; usernames are just display names)."""
+    email = email.strip().lower()
+    user = get_user_by_email(db, email)
+    if user and verify_password(password, user["password_hash"]):
+        return user, None
+    return None, "Wrong email or password."
 
 
 def create_session(db, user_id: int) -> str:
