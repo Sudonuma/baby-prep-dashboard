@@ -163,12 +163,12 @@
               <div class="mt-1">
                 <div class="flex flex-wrap items-center gap-1.5">
                   <template x-for="b in brandsFor('{{ item.id }}')" :key="b">
-                    <span class="inline-flex items-center gap-1 rounded-full border border-stone-200 bg-stone-50 px-2 py-0.5 text-[11px] text-stone-600">
+                    <span class="inline-flex items-center gap-1 rounded-full border border-blush-200 bg-blush-50 px-2 py-0.5 text-[11px] font-medium text-blush-700">
                       <span x-text="b"></span>
-                      <button @click="removeBrand('{{ item.id }}', b)" class="text-stone-300 transition hover:text-rose-500">✕</button>
+                      <button @click="removeBrand('{{ item.id }}', b)" class="text-blush-400 transition hover:text-rose-500">✕</button>
                     </span>
                   </template>
-                  <button x-show="brandEdit!=='{{ item.id }}'" @click="openBrandEdit('{{ item.id }}')" class="rounded-full border border-dashed border-stone-300 px-2 py-0.5 text-[11px] text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ brand</button>
+                  <button x-show="brandEdit!=='{{ item.id }}'" @click="openBrandEdit('{{ item.id }}')" class="rounded-full border border-dashed border-blush-300 px-2 py-0.5 text-[11px] font-medium text-blush-600 transition hover:border-blush-500 hover:text-blush-700">+ brand</button>
                 </div>
                 <div x-show="brandEdit==='{{ item.id }}'" class="relative mt-1">
                   <input type="text" x-model="brandQuery" @focus="brandMenu='{{ item.id }}'" @input="brandMenu='{{ item.id }}'" @keydown.enter.prevent="commitBrandInput('{{ item.id }}')" @blur="brandEdit=null; brandMenu=null" @keydown.escape="brandEdit=null; brandMenu=null" placeholder="Type or pick a brand" class="w-full rounded-lg border border-blush-200 bg-white px-2 py-1 text-xs text-blush-700 outline-none transition focus:border-blush-300">
