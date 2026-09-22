@@ -424,16 +424,19 @@
                     </span>
                   </div>
 
-                  <!-- link -->
+                  <!-- links -->
                   <div class="mt-2 flex flex-wrap items-center gap-1.5 text-xs">
-                    <a x-show="linkFor(item.id)" :href="linkFor(item.id)" target="_blank" rel="noopener" class="inline-flex items-center gap-1 rounded-full bg-blush-50 px-2 py-1 font-medium text-blush-700 transition hover:bg-blush-200">🔗 <span>Buy</span></a>
-                    <button x-show="linkFor(item.id) && linkEdit!==item.id" @click="linkEdit=item.id; linkDraft=linkFor(item.id)" class="text-[11px] text-stone-400 transition hover:text-blush-600">edit</button>
-                    <button x-show="!linkFor(item.id) && linkEdit!==item.id" @click="linkEdit=item.id; linkDraft=''" class="inline-flex items-center gap-1 rounded-full border border-dashed border-stone-300 px-2 py-1 text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ link</button>
-                    <button x-show="state.links[item.id] && linkEdit!==item.id" @click="clearLink(item.id)" class="text-[11px] text-stone-400 transition hover:text-rose-500">remove</button>
+                    <template x-for="url in linksFor(item.id)" :key="url">
+                      <span class="inline-flex items-center gap-1 rounded-full bg-blush-50 px-2 py-1 font-medium text-blush-700">
+                        <a :href="url" target="_blank" rel="noopener" class="inline-flex items-center gap-1 hover:underline" x-text="'🔗 ' + hostOf(url)"></a>
+                        <button @click="removeLink(item.id, url)" class="text-blush-400 transition hover:text-rose-500">✕</button>
+                      </span>
+                    </template>
+                    <button x-show="linkEdit!==item.id" @click="linkEdit=item.id; linkDraft=''" class="inline-flex items-center gap-1 rounded-full border border-dashed border-stone-300 px-2 py-1 text-stone-500 transition hover:border-blush-300 hover:text-blush-600">+ link</button>
                   </div>
                   <div class="mt-2 flex gap-1.5" x-show="linkEdit===item.id">
-                    <input type="url" x-model="linkDraft" @keydown.enter="saveLink(item.id)" placeholder="Paste product link (https://…)" class="min-w-0 flex-1 rounded-lg border border-blush-200 bg-white px-2 py-1.5 text-xs">
-                    <button @click="saveLink(item.id)" class="rounded-lg bg-blush-500 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Save</button>
+                    <input type="url" x-model="linkDraft" @keydown.enter="addLink(item.id)" placeholder="Paste product link (https://…)" class="min-w-0 flex-1 rounded-lg border border-blush-200 bg-white px-2 py-1.5 text-xs">
+                    <button @click="addLink(item.id)" class="rounded-lg bg-blush-500 px-2.5 py-1.5 text-xs font-medium text-white transition hover:bg-blush-600">Add</button>
                   </div>
 
                   <p class="mt-2 min-h-5 text-xs leading-5 text-stone-500" x-show="item.note" x-text="item.note"></p>
@@ -531,10 +534,22 @@
         sizeSystem:'EU', theme:'peach', profile:{name:'', due:''},
       };
 
+      function normalizeLinks(links){
+        const out={};
+        for(const [k,v] of Object.entries(links||{})){
+          out[k] = Array.isArray(v) ? v.filter(Boolean) : (v ? [v] : []);
+        }
+        return out;
+      }
+
       function loadState(){
         try{
           const raw = JSON.parse(localStorage.getItem('babyPrepState')||'null');
-          if(raw) return {...DEFAULT_STATE, ...raw};
+          if(raw){
+            const s = {...DEFAULT_STATE, ...raw};
+            s.links = normalizeLinks(s.links);
+            return s;
+          }
         }catch(e){}
         // one-time migration from the earlier local-storage keys
         const s = JSON.parse(JSON.stringify(DEFAULT_STATE));
@@ -551,7 +566,7 @@
             }
           }
           const links = JSON.parse(localStorage.getItem('babyItemLinks')||'null');
-          if(links) s.links = links;
+          if(links) s.links = normalizeLinks(links);
           const brands = JSON.parse(localStorage.getItem('babyBrands')||'null');
           if(brands){
             const items = {};
@@ -774,17 +789,28 @@
         },
 
         // ---------- links ----------
-        linkFor(id){ return this.state.links[id] || (this.itemById(id)||{}).purchase_url || '' },
-        saveLink(id){
-          const v=(this.linkDraft||'').trim();
-          const {[id]:_drop, ...rest}=this.state.links;
-          this.state.links = v ? {...rest, [id]:v} : rest;
-          this.save();
-          this.linkEdit=null;
+        linksFor(id){
+          const v=this.state.links[id];
+          if(Array.isArray(v)) return v.filter(Boolean);
+          if(typeof v==='string' && v) return [v];
+          const d=(this.itemById(id)||{}).purchase_url;
+          return d ? [d] : [];
         },
-        clearLink(id){
-          const {[id]:_drop, ...rest}=this.state.links;
-          this.state.links=rest;
+        hostOf(url){ try { return new URL(url).hostname.replace(/^www\./,''); } catch(e){ return url; } },
+        addLink(id){
+          const raw=(this.linkDraft||'').trim();
+          if(raw){
+            const url=/^https?:\/\//.test(raw) ? raw : 'https://'+raw;
+            const arr=this.linksFor(id);
+            if(!arr.includes(url)){
+              this.state.links={...this.state.links, [id]:arr.concat(url)};
+              this.save();
+            }
+          }
+          this.linkDraft=''; this.linkEdit=null;
+        },
+        removeLink(id,url){
+          this.state.links={...this.state.links, [id]:this.linksFor(id).filter(u=>u!==url)};
           this.save();
         },
 
